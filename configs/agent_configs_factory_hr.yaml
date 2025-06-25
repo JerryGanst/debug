@@ -1,0 +1,53 @@
+max_loop: 1
+
+models:
+  default:
+    endpoint: "http://10.180.116.2:6380/v1"
+    key: "SOME_KEY"
+    temperature: 0.7
+  qwen-qwq-reasoning:
+    endpoint: "http://10.180.116.2:6379/v1"
+    key: "SOME_KEY"
+    temperature: 0.7
+  qwen-plus:
+    endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    key: "sk-189f378c852d49aa97284510100cc9ef"
+    model: "qwen-plus"
+    temperature: 0.7
+
+modules:
+  question_classification:
+    default_model: "default"
+  commercial_api:
+    default_model: "qwen-plus"
+  question_optimization:
+    enable: True
+    default_model: "default"
+  answer_generation:
+    default_model: "default"
+  answer_evaluation:
+    default_model: "default"
+  summarization:
+    default_model: "default"
+  translation:
+    default_model: "default"
+  doc_metadata:
+    default_model: "default"
+  document_abstract:
+    default_model: "default"
+  page_abstract:
+    default_model: "default"
+  refine_page_text:
+    default_model: "default"
+  universal_chat:
+    default_model: "default"
+
+context_retrieval:
+  weaviate_endpoint: "http://127.0.0.1:8080" # 修改为HR知识库的weaviate服务的新端口8080
+  embedding_endpoint: "http://127.0.0.1:8000/embed/"
+
+mongodb:
+  mongodb_connection_string: "127.0.0.1:27017" # 修改为HR知识库的mongodb服务的新端口27017
+
+tokenizer_service:
+  tokenizer_endpoint: "http://10.180.116.2:15000" # token计数接口
