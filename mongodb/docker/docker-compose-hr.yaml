@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  mongodb-rag-hr: #服务名，避免冲突
+    image: mongo:latest
+    container_name: mongodb-rag-hr # hr知识库的新容器名
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 121314
+    volumes:
+      - ../mongodb_data_hr:/data/db # hr知识库的数据存储路径
+    ports:
+      - "27017:27017" # hr知识库的端口27018

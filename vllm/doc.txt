@@ -1,0 +1,12 @@
+vllm serve ./huggingface_models/deepseek-ai_DeepSeek-R1-Distill-Qwen-1.5B/ --config vllm/config.yaml
+
+
+
+curl http://localhost:6379/v1/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+      "model": "qwen-ns",
+      "messages": [
+        {"role": "user", "content": "Hello, how are you?"}
+      ]
+    }'

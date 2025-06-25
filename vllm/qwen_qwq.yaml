@@ -1,0 +1,11 @@
+host: "0.0.0.0"
+port: 6379
+uvicorn-log-level: "info"
+kv-cache-dtype: "fp8" # not for RTX-3090 or A100
+served-model-name: "qwen-qwq-reasoning"
+gpu_memory_utilization: 0.9
+max_model_len: 32768
+max_num_seqs: 50
+max_num_batched_tokens: 88000
+dtype: half
+#repetition-penalty: 1.2
