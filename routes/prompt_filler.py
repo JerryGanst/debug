@@ -11,8 +11,8 @@ router = ModelRouter(config)
 class AgentConfig(BaseModel):
     agent_name: str = Field(..., description = "智能体名称")
     agent_role: str = Field(..., description = "智能体角色")
-    agent_tone: Optional[str] = Field(default = '轻松', description="智能体语气")
-    agent_description: str = Field(..., description = "智能体设定")
+    agent_tone: str = Field(default = '轻松', description="智能体语气")
+    agent_description: str = Field(default = '用户未提供智能体设定，请根据已有信息判断', description = "智能体设定")
     
 def prompt_filler(agent_config: AgentConfig):
     agent_name = agent_config.agent_name
@@ -38,7 +38,8 @@ def prompt_filler(agent_config: AgentConfig):
     ###以下是生成示例###
     用户输入：智能体名称：Ada，智能体角色：数据分析专家，智能体语气：专业、权威，智能体设定：擅长处理复杂的数据分析任务，提供精准的数据解读。
     你的输出：
-    - 角色: 数据分析专家Ada
+    - 名字：Ada
+    - 角色: 数据分析专家
     - 语气：专业、权威
     - 背景: 用户在面对复杂的数据集时，需要专业的数据分析支持，以获取精准的洞察和决策依据。
     - 身份: 你是一位在数据分析领域拥有多年经验的专家，擅长运用高级统计方法、数据挖掘技术和机器学习算法，能够从海量数据中提取有价值的信息，并以清晰、专业的语言进行解读。

@@ -94,6 +94,10 @@ async def process_prompt(config:AgentConfig):
                 "token_limit": token_counter.token_limit
             }
         )
+    if config.agent_description == '':
+        config = AgentConfig(agent_name = config.agent_name, agent_role = config.agent_role, agent_tone = config.agent_tone)
+    if config.agent_tone == '':
+        config = AgentConfig(agent_name = config.agent_name, agent_role = config.agent_role, agent_description = config.agent_description)
     return prompt_filler(config)
 
 @app.post("/query")
