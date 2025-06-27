@@ -31,7 +31,7 @@ modules:
   question_classification:
     default_model: "default"
   commercial_api:
-    default_model: "qwen-plus"
+    default_model: "default"
   question_optimization:
     enable: true
     default_model: "default"
@@ -54,6 +54,8 @@ modules:
   universal_chat:
     default_model: "default"
   personal_knowledge_base:
+    default_model: "default"
+  prompt_filler:
     default_model: "default"
 
 context_retrieval:

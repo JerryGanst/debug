@@ -13,13 +13,25 @@ models:
     temperature: 0.7
     model_name: "qwen-qwq-reasoning"
     thinking: true
+  qwen3:
+    endpoint: "http://10.180.116.172:1145/v1"
+    key: "SOME_KEY"
+    temperature: 0.7
+    model_name: "qwen3"
+    thinking: false
+  qwen3-reasoning:
+    endpoint: "http://10.180.116.5:1145/v1"
+    key: "SOME_KEY"
+    temperature: 0.7
+    model_name: "qwen3-reasoning"
+    thinking: true
 
 
 modules:
   question_classification:
     default_model: "default"
   commercial_api:
-    default_model: "qwen-plus"
+    default_model: "default"
   question_optimization:
     enable: true
     default_model: "default"
@@ -30,7 +42,7 @@ modules:
   summarization:
     default_model: "default"
   translation:
-    default_model: "default"
+    default_model: "qwen3"
   doc_metadata:
     default_model: "default"
   document_abstract:
@@ -42,6 +54,8 @@ modules:
   universal_chat:
     default_model: "default"
   personal_knowledge_base:
+    default_model: "default"
+  prompt_filler:
     default_model: "default"
 
 context_retrieval:

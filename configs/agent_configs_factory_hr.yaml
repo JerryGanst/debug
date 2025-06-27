@@ -18,7 +18,7 @@ modules:
   question_classification:
     default_model: "default"
   commercial_api:
-    default_model: "qwen-plus"
+    default_model: "qwen3"
   question_optimization:
     enable: True
     default_model: "default"

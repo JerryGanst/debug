@@ -5,7 +5,7 @@ from typing import Dict
 
 from agents.ask_agent import ask_local_agent
 from configs.load import load_config, ModelRouter
-from utils.glossary import glossary_extract
+from utils.glossary.glossary import glossary_extract
 
 class TranslationResponse(BaseModel):
     translation_result: str  # 翻译结果
@@ -81,6 +81,7 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
         f"""***SOURCE_TEXT_BEGIN***\n{source_text}\n***SOURCE_TEXT_END***
         #BELOW IS FINAL REMINDER, PLEASE DO NOT TRANSLATE.#"""
     )
+    
     chatml_prompt = _build_chatml_prompt(system_prompt, assistant_prompt, user_prompt)
     
     # 调用本地 LLM
@@ -95,5 +96,4 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
         )
         .get("answer")
     )
-    print("AAAAAAAAAAAAAAAAAAAAAA")
     return answer_dict

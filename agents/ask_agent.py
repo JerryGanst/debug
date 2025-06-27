@@ -14,6 +14,7 @@ def ask_local_agent(
     api_key="SOME_KEY",
     api_base="",
     temperature=0.0,
+    thinking = False,
     max_tokens=8192
 ):
     """
@@ -23,7 +24,6 @@ def ask_local_agent(
     client = OpenAI(api_key=api_key, base_url=api_base)
     models = client.models.list()
     model = models.data[0].id
-    print(f"model: {model}, prompt-length: {len(prompt)}")
 
     final_note = "\n\n#####最后提醒#####\n\n**请避免重复内容，不要连续输出空格，相同字符，或重复内容块**\n\n"
     prompt = prompt + final_note
@@ -37,8 +37,6 @@ def ask_local_agent(
         # print(response_json)
     else:
         response_json = response_type.model_json_schema()
-    print("response_json:")
-    print(response_json)
     max_retries = 3
     for attempt in range(max_retries):
         try:
@@ -49,15 +47,14 @@ def ask_local_agent(
                 max_tokens=max_tokens,
                 extra_body={
                     "guided_json": response_json,
-                    "sampling_parameters": {"repetition_penalty": 1.2}
+                    "sampling_parameters": {"repetition_penalty": 1.2},
+                    "chat_template_kwargs": {"enable_thinking": thinking}
                 },
             )
 
             raw_content = response.choices[0].message.content
             parsed_result = json.loads(raw_content)
             print(f"第{attempt+1}次请求")
-            print("content:")
-            print(parsed_result)
             # 如果模型名字包含 "reasoning"，则返回的数据格式中应该具备 "reasoning" 和 "answer"
             if "reasoning" in model:
                 validated = wrapper.create_wrapped_model()(**parsed_result)
