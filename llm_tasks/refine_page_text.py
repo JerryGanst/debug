@@ -48,6 +48,8 @@ def refine_text_with_llm(original_text: str):
 
     openai_api_base = router.get_model_config("refine_page_text").get("endpoint")
     openai_api_key = router.get_model_config("refine_page_text").get("key", "SOME_KEY")
+    thinking = router.get_model_config("refine_page_text").get("thinking")
+    
     client = OpenAI(
         # defaults to os.environ.get("OPENAI_API_KEY")
         api_key=openai_api_key,
@@ -62,6 +64,9 @@ def refine_text_with_llm(original_text: str):
         model=model,
         temperature=0.0,
         # stream=True  # 启用流式输出
+        extra_body={
+            "chat_template_kwargs": {"enable_thinking": thinking},
+    },
     )
     refined_text = response.choices[0].message.content.strip()
     # refined_text = ""

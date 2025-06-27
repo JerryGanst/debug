@@ -36,6 +36,7 @@ def summarize(request: QueryRequest):
     openai_api_key = router.get_model_config("summarization").get("key", "SOME_KEY")
     openai_api_base = router.get_model_config("summarization").get("endpoint")
     temperature = router.get_model_config("summarization").get("temperature", 0.0)
+    thinking = router.get_model_config("summarization").get("thinking")
 
     return ask_local_agent(prompt, response_type=SummaryResponse, api_key=openai_api_key,
-                           api_base=openai_api_base, temperature=temperature).get("answer")
+                           api_base=openai_api_base, temperature=temperature, thinking = thinking).get("answer")

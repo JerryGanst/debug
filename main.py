@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import StreamingResponse, JSONResponse
 import os
 import logging
 from routes.chat import ChatRequest, chat_stream, chat_non_stream
-from models.query import QueryRequest
+from models.query import QueryRequest, WholeProcessRecorder, RecordQueryParams
 from routes.summarization import SummaryResponse, summarize
 from routes.translation import translate, TranslationResponse, TranslationRequest
 from routes.prompt_filler import prompt_filler, AgentConfig
@@ -12,6 +12,11 @@ from routes.similarity import SimilarityRequest, SimilarityResponse, get_embeddi
 from domains.context import DomainContext
 from configs.load_env import settings
 from tokenizer_service import TokenCounter
+from typing import List
+from datetime import datetime
+from pydantic import BaseModel, Field
+from mongodb.ops.object_op import get_objects_by_conditions
+from routes.personal_knowledge_base.rag_pipeline import router as personal_rag
 
 # 配置日志
 logging.basicConfig(
@@ -40,6 +45,8 @@ app = FastAPI()
 
 # 创建token计数器实例
 token_counter = TokenCounter()
+
+app.include_router(personal_rag)
 
 # Define request model
 
@@ -242,6 +249,31 @@ async def count_tokens(request: dict):
             status_code=400,
             content={"error": "请求格式错误，应包含'text'或'messages'字段"}
         )
+
+
+
+@app.post("/get_records")
+async def get_whole_process_records(
+    request: RecordQueryParams
+):
+    """
+    查询whole_process_records，按start_time时间范围过滤，返回所有字段并加domains字段
+    """
+    conditions = {
+        "start_time": {
+            "$gte": request.start_time,
+            "$lte": request.end_time
+        }
+    }
+    error, records = get_objects_by_conditions(conditions, WholeProcessRecorder, "whole_process_records")
+    if error:
+        return {"error": error}
+    result = []
+    for r in records:
+        d = r.model_dump()
+        d["domain"] = settings.domain_name
+        result.append(d)
+    return result
 
 
 # Run using: uvicorn main:app --reload

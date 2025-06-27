@@ -88,6 +88,8 @@ def chat_stream(request: ChatRequest):
         base_url=router.get_model_config("universal_chat",request.model).get("endpoint"),
         api_key=router.get_model_config("universal_chat",request.model).get("key")
     )
+    thinking = router.get_model_config("universal_chat",request.model).get("thinking")
+    
     models = client.models.list()
     model = models.data[0].id
 
@@ -102,7 +104,10 @@ def chat_stream(request: ChatRequest):
         messages=[msg.dict() for msg in processed_messages],
         max_tokens=DEFAULT_MAX_TOKENS,
         temperature=temperature,
-        stream=True
+        stream=True,
+        extra_body={
+            "chat_template_kwargs": {"enable_thinking": thinking},
+        },
     )
 
     # 用于收集完整回复
@@ -172,6 +177,9 @@ async def chat_non_stream(request: ChatRequest) -> ChatResponse:
         base_url=router.get_model_config("universal_chat",request.model).get("endpoint"),
         api_key=router.get_model_config("universal_chat",request.model).get("key")
     )
+    
+    thinking = router.get_model_config("universal_chat",request.model).get("thinking")
+    
     models = client.models.list()
     model = models.data[0].id
 
@@ -186,7 +194,10 @@ async def chat_non_stream(request: ChatRequest) -> ChatResponse:
         messages=[msg.dict() for msg in processed_messages],
         max_tokens=DEFAULT_MAX_TOKENS,
         temperature=temperature,
-        stream=False
+        stream=False,
+        extra_body={
+            "chat_template_kwargs": {"enable_thinking": thinking},
+        },
     )
 
     message_content = response.choices[0].message.content
@@ -235,6 +246,8 @@ def generate_summary(text: str) -> str:
             base_url=router.get_model_config("universal_chat").get("endpoint"),
             api_key=router.get_model_config("universal_chat").get("key")
         )
+        
+        thinking = router.get_model_config("universal_chat").get("thinking")
         models = client.models.list()
         model = models.data[0].id
 
@@ -243,7 +256,10 @@ def generate_summary(text: str) -> str:
             messages=summary_prompt,
             max_tokens=1000,
             temperature=0.7,
-            stream=False
+            stream=False,
+            extra_body={
+                "chat_template_kwargs": {"enable_thinking": thinking},
+            },
         )
         return summary_response.choices[0].message.content.strip()
     except Exception as e:

@@ -70,6 +70,9 @@ class ReasoningJsonSchemaWrapper(BaseModel):
             answer=(Annotated[self.answer, Field(description="正式回答")], ...)  # `answer` 作为 `BaseModel` 类型的字段
         )
 
+class RecordQueryParams(BaseModel):
+    start_time: datetime = Field(..., description="开始时间")
+    end_time: datetime = Field(..., description="结束时间")
 
 class WholeProcessRecorder(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="id")

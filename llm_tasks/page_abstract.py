@@ -58,6 +58,7 @@ def generate_page_abstract(input_text: str):
 
     openai_api_base = router.get_model_config("page_abstract").get("endpoint")
     openai_api_key = router.get_model_config("page_abstract").get("key", "SOME_KEY")
+    thinking = router.get_model_config("page_abstract").get("thinking")
 
     client = OpenAI(
         # defaults to os.environ.get("OPENAI_API_KEY")
@@ -71,7 +72,10 @@ def generate_page_abstract(input_text: str):
     response = client.chat.completions.create(
         messages=[{"role": "system", "content": prompt}],
         model=model,
-        temperature=0.0
+        temperature=0.0,
+        extra_body={
+        "chat_template_kwargs": {"enable_thinking": thinking},
+    },
     )
     page_abstract = response.choices[0].message.content.strip()
     return page_abstract

@@ -56,6 +56,8 @@ def generate_document_abstract(document_title: str, page_abstracts: str):
 
     openai_api_base = router.get_model_config("document_abstract").get("endpoint")
     openai_api_key = router.get_model_config("document_abstract").get("key", "SOME_KEY")
+    thinking = router.get_model_config("document_abstract").get("thinking")
+    
     client = OpenAI(
         # defaults to os.environ.get("OPENAI_API_KEY")
         api_key=openai_api_key,
@@ -68,7 +70,10 @@ def generate_document_abstract(document_title: str, page_abstracts: str):
     response = client.chat.completions.create(
         messages=[{"role": "system", "content": prompt}],
         model=model,
-        temperature=0.0
+        temperature=0.0,
+        extra_body={
+            "chat_template_kwargs": {"enable_thinking": thinking},
+        },
     )
     document_abstract = response.choices[0].message.content.strip()
     return document_abstract

@@ -14,12 +14,19 @@ def retrieve_context(info_to_collect: List[str], question_category: int, config:
     
     # 生成查询的嵌入向量
     query_embeddings = []
+    embedding_endpoint = config.get("embedding_endpoint")
+    if not embedding_endpoint:
+        logger.error("未配置 embedding_endpoint，无法生成嵌入向量。")
+        return []
     for query in info_to_collect:
         params = {"text": query}
         try:
-            response = requests.post(config.get("embedding_endpoint"), params=params)
-            query_embedding = response.json().get('embedding')
-            query_embeddings.append(query_embedding)
+            response = requests.post(embedding_endpoint, params=params)
+            embedding = response.json().get('embedding')
+            if embedding is not None:
+                query_embeddings.append(embedding)
+            else:
+                logger.warning(f"嵌入向量服务响应中缺少 'embedding' 字段: {response.text}")
         except Exception as e:
             logger.error(f"生成嵌入向量失败: {str(e)}")
             continue
