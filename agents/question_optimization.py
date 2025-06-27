@@ -33,8 +33,9 @@ def optimize_question(user_question: str, question_category: int, config: dict):
     openai_api_key = config.get("key", "SOME_KEY")
     openai_api_base = config.get("endpoint")
     temperature = config.get("temperature", 0.0)
+    thinking = config.get("thinking")
 
-    return ask_local_agent(prompt, response_type=OptimizedQuestion, api_key=openai_api_key, api_base=openai_api_base, temperature=temperature)
+    return ask_local_agent(prompt, response_type=OptimizedQuestion, api_key=openai_api_key, api_base=openai_api_base, temperature=temperature, thinking = thinking)
 
 
 if __name__ == "__main__":

@@ -63,22 +63,41 @@ def prompt_filler(agent_config: AgentConfig):
         '''
     
     try:
-
         client = OpenAI(
             base_url=router.get_model_config("prompt_filler").get("endpoint"),
             api_key=router.get_model_config("prompt_filler").get("key")
         )
+        thinking = router.get_model_config("prompt_filler").get('thinking')
+
         models = client.models.list()
         model = models.data[0].id
 
+        # Build extra_body if reasoning is configured
+        
+
+        # Generate response
         prompt_filler_response = client.chat.completions.create(
             model=model,
-            messages = [{"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}],
-            temperature=0.7,
-            stream=False
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=model_config.get("temperature", 0.7),
+            stream=False,
+            extra_body = {
+            "chat_template_kwargs": {"enable_thinking": thinking}
+        },
         )
-        return prompt_filler_response.choices[0].message.content.strip()
+        
+        model_output = prompt_filler_response.choices[0].message.content
+
+        if model_output:
+            return model_output.strip()
+        else:
+            print("⚠️ 模型未返回有效输出内容。")
+            return "提示词生成失败（无输出）"
+
+
     except Exception as e:
         print(f"提示词生成失败: {e}")
         return "提示词生成失败"

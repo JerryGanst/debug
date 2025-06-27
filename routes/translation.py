@@ -82,6 +82,7 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
         #BELOW IS FINAL REMINDER, PLEASE DO NOT TRANSLATE.#"""
     )
     chatml_prompt = _build_chatml_prompt(system_prompt, assistant_prompt, user_prompt)
+    
     # 调用本地 LLM
     answer_dict = (
         ask_local_agent(
@@ -90,8 +91,9 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
             api_key=router.get_model_config("translation").get("key", "SOME_KEY"),
             api_base=router.get_model_config("translation").get("endpoint"),
             temperature=router.get_model_config("translation").get("temperature", 0.0),
+            thinking = router.get_model_config("translation").get("thinking"),
         )
         .get("answer")
     )
-
+    print("AAAAAAAAAAAAAAAAAAAAAA")
     return answer_dict

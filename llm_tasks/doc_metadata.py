@@ -44,9 +44,10 @@ def generate_document_metadata(document: Document, pages_to_use=3):
     openai_api_base = router.get_model_config("doc_metadata").get("endpoint")
     openai_api_key = router.get_model_config("doc_metadata").get("key", "SOME_KEY")
     temperature = router.get_model_config("doc_metadata").get("temperature")
-
+    thinking = router.get_model_config("doc_metadata").get("thinking")
+    
     return ask_local_agent(prompt, response_type=DocumentMetaData, api_key=openai_api_key,
-                           api_base=openai_api_base, temperature=temperature).get("answer")
+                           api_base=openai_api_base, temperature=temperature, thinking = thinking).get("answer")
 
 
 if __name__ == "__main__":

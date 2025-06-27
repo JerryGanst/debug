@@ -5,15 +5,14 @@ models:
     endpoint: "http://10.180.116.2:6380/v1"
     key: "SOME_KEY"
     temperature: 0.7
+    model_name: "qwen-ns-32b"
+    thinking: false
   qwen-qwq-reasoning:
     endpoint: "http://10.180.116.2:6379/v1"
     key: "SOME_KEY"
     temperature: 0.7
-  qwen-plus:
-    endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    key: "sk-189f378c852d49aa97284510100cc9ef"
-    model: "qwen-plus"
-    temperature: 0.7
+    model_name: "qwen-qwq-reasoning"
+    thinking: true
 
 modules:
   question_classification:
@@ -41,13 +40,22 @@ modules:
     default_model: "default"
   universal_chat:
     default_model: "default"
+  personal_knowledge_base:
+    default_model: "default"
 
 context_retrieval:
   weaviate_endpoint: "http://127.0.0.1:8080" # 修改为HR知识库的weaviate服务的新端口8080
-  embedding_endpoint: "http://127.0.0.1:8000/embed/"
+  embedding_endpoint: "http://10.180.116.2:8000/embed/" # 单个向量生成接口
+  embedding_batch_endpoint: "http://10.180.116.5:8000/embed_batch/"
 
 mongodb:
   mongodb_connection_string: "127.0.0.1:27017" # 修改为HR知识库的mongodb服务的新端口27017
 
 tokenizer_service:
   tokenizer_endpoint: "http://10.180.116.2:15000" # token计数接口
+
+minio:
+  minio_endpoint: "10.180.248.141:9000"
+  minio_access_key: "minioadmin"
+  minio_secret_key: "G3j+-G]aMX%bc/Wt"
+  minio_bucket: "ai-file"
