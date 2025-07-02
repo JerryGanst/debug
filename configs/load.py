@@ -15,6 +15,7 @@ class ModelRouter:
     def __init__(self, config):
         self.models = config['models']
         self.modules = config['modules']
+        self.embedding_batch_api_url = config['context_retrieval']['embedding_batch_endpoint']
 
     # 获取用户指定模型或者模块默认模型的配置
     def get_model_config(self, module_name, user_selected_model=None):
@@ -23,3 +24,6 @@ class ModelRouter:
     # 获取指定模块配置
     def get_module_config(self,module_name):
         return self.modules[module_name]
+    # 获取embedding batch服务的api_url
+    def get_embedding_batch_api_url(self):
+        return self.embedding_batch_api_url

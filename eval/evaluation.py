@@ -88,6 +88,7 @@ def llm_evaluation(question: str, final_answer: dict, model_answer, config: dict
 
     openai_api_key = config.get("key")
     openai_api_base = config.get("endpoint")
+    thinking = config.get("thinking")
 
     client = OpenAI(
         api_key=openai_api_key,
@@ -101,7 +102,10 @@ def llm_evaluation(question: str, final_answer: dict, model_answer, config: dict
         messages=[{"role": "system", "content": prompt}],
         model=model,
         temperature=config.get("temperature"),
-        extra_body={"guided_json": Evaluation.model_json_schema()}
+        extra_body={
+            "guided_json": Evaluation.model_json_schema(),
+            "chat_template_kwargs": {"enable_thinking": thinking},
+        }
     )
     return json.loads(response.choices[0].message.content)
 

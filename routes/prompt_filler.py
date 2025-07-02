@@ -30,6 +30,8 @@ def prompt_filler(agent_config: AgentConfig):
     - Constrains: 
     1. 优化后的提示词应保持简洁明了，易于理解，同时充分展现智能体的特色和功能。提示词应避免冗长和复杂的表述，确保智能体能够快速准确地理解和执行。
     2. 仅输出优化过后的提示词，不包含优化后的提示词之外的内容。
+    3. 所生成的内容中，不得包含除提示词以外的内容。
+    4. 不得以任何形式拒绝用户的请求，请尽量贴合用户发出的请求生成提示词。
     - Workflow:
     1. 分析用户提供的智能体名称、角色、语气和设定，明确智能体的核心特征和用户期望。
     2. 根据智能体的特征，设计提示词的结构，确保提示词能够引导智能体发挥其独特作用。
@@ -63,22 +65,38 @@ def prompt_filler(agent_config: AgentConfig):
         '''
     
     try:
-
         client = OpenAI(
             base_url=router.get_model_config("prompt_filler").get("endpoint"),
             api_key=router.get_model_config("prompt_filler").get("key")
         )
+        thinking = router.get_model_config("prompt_filler").get('thinking')
+
         models = client.models.list()
         model = models.data[0].id
 
+        # Generate response
         prompt_filler_response = client.chat.completions.create(
             model=model,
-            messages = [{"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}],
-            temperature=0.7,
-            stream=False
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=router.get_model_config("prompt_filler").get("temperature", 0.7),
+            stream=False,
+            extra_body = {
+            "chat_template_kwargs": {"enable_thinking": thinking}
+        },
         )
-        return prompt_filler_response.choices[0].message.content.strip()
+        
+        model_output = prompt_filler_response.choices[0].message.content
+
+        if model_output:
+            return model_output.strip()
+        else:
+            print("⚠️ 模型未返回有效输出内容。")
+            return "提示词生成失败（无输出）"
+
+
     except Exception as e:
         print(f"提示词生成失败: {e}")
         return "提示词生成失败"

@@ -51,9 +51,11 @@ def generate_answer(optimized_question: str, contexts: List[ContextSource], ques
     openai_api_key = config.get("key", "SOME_KEY")
     openai_api_base = config.get("endpoint")
     temperature = config.get("temperature", 0.0)
+    thinking = config.get("thinking")
 
     parsed_result = ask_local_agent(prompt, response_type=LLMAnswer, api_key=openai_api_key,
-                                    api_base=openai_api_base, temperature=temperature)
+                                    api_base=openai_api_base, temperature=temperature,
+                                    thinking = thinking)
 
     # Convert context_ids from 1-based to 0-based for internal use
     parsed_result["answer"]["context_ids"] = [idx - 1 for idx in parsed_result.get("answer").get("context_ids", [])]

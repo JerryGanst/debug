@@ -22,10 +22,14 @@
 ## 1. 启动模型
 1.1 下载与解压语言模型
 以A100为例，首先从https://huggingface.co/上面下载模型，解压在/root/modelscope_models下。
+
 1.2 下载 RAG 平台源码并存放至指定位置
 前往公司gitlab, 复制下载链接后使用git clone 复制至指定位置 如在 A100 中 /opt/rag-projects/rag-it/luxshare-ai-rag
+
 1.3 创建虚拟环境
-1.3.1 导航至项目目录中  
+
+1.3.1 导航至项目目录中
+
 ```bash
 cd /opt/rag-projects/rag-it/luxshare-ai-rag
 ```
@@ -46,8 +50,7 @@ pip install -r "requirements.txt"
 ```bash
 CUDA_VISIBLE_DEVICES=0 vllm serve /root/modelscope_models/Qwen_Qwen3-32B-FP8 \
   --config /opt/rag-projects/rag-it/luxshare-ai-rag/vllm/qwen3_32b_fp8_a100.yaml \
-  --enable-reasoning \
-  --reasoning-parser deepseek_r1 \
+  --reasoning-parser qwen3 \
   --enable-auto-tool-choice \
   --tool-call-parser hermes
 ```
