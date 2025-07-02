@@ -107,8 +107,8 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
             )
 
             full_response = ""
-            async for chunk in response:
-                delta = chunk.choices[0].delta.get("content")
+            for chunk in response:
+                delta = chunk.choices[0].delta.content
                 if delta:
                     full_response += delta
                     yield translate_stream_response(delta)
