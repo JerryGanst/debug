@@ -3,12 +3,19 @@ import textwrap
 from pydantic import BaseModel
 from typing import Dict
 from openai import OpenAI
+import asyncio
 
 from configs.load import load_config, ModelRouter
 from utils.glossary.glossary import glossary_extract
 
 class TranslationResponse(BaseModel):
     translation_result: str  # 翻译结果
+    
+def translate_stream_response(content: str) -> str:
+    # 你可以定义一个简单的 Pydantic 模型用于统一数据格式
+    response_data = {"translation_result": content}
+    json_str = json.dumps(response_data, ensure_ascii=False)
+    return f"data: {json_str}\n\n"
 
 
 class TranslationRequest(BaseModel):
@@ -25,7 +32,7 @@ LANG_MAP: Dict[str, str] = {
     "西班牙语": "Spanish",
 }
 
-def translate(request: TranslationRequest):
+async def translate(request: TranslationRequest):
     config = load_config()
     router = ModelRouter(config)
     source_text = request.source_text
@@ -49,7 +56,7 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
 • Always and only translate natural-language content into **{target_language}**
 
 ──────────────────────────── 2. MARKDOWN REFERENCE ────────────────────────────
-• Table       : | col A | col B | … |           (+ second line of --- separators)
+• Table       : | col A | col B | … |           (+ second line of --- separators)
 • Headings    : # H1 ‖ ## H2 ‖ ### H3 …
 • Lists       : - item  ‖ * item  ‖ 1. item (preserve nesting/indent)
 • Code        : ```lang … ``` for blocks; `inline code` for snippets
@@ -73,29 +80,50 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
     )
 
     config = router.get_model_config("translation")
-    
-    api_key = config.get("key","SOME_KEY")
+    api_key = config.get("key", "SOME_KEY")
     api_base = config.get("endpoint")
-    thinking = config.get("thinking")
-    temperature = 0.2
-    
-    
-    client = OpenAI(api_key=api_key, base_url=api_base)
-    models = client.models.list()
-    model = models.data[0].id
-    
-    response = client.chat.completions.create(
-        messages=[{"role": "system", "content": system_prompt},
-                  {"role": "assistant", "content": assistant_prompt},
-                  {"role": "user", "content": user_prompt}],
-        model=model,
-        temperature=temperature,
-        extra_body={
-            "sampling_parameters": {"repetition_penalty": 1.2},
-            "chat_template_kwargs": {"enable_thinking": thinking}
-        },
-    )
+    thinking = config.get("thinking", False)
+    temperature = config.get("temperature", 0.2)
 
-    raw_content = response.choices[0].message.content    
+    # Retry logic
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            client = OpenAI(api_key=api_key, base_url=api_base)
+            models = client.models.list()
+            model = models.data[0].id
 
-    return {"translation_result": raw_content}
+            response = client.chat.completions.create(
+                messages=[{"role": "system", "content": system_prompt},
+                          {"role": "assistant", "content": assistant_prompt},
+                          {"role": "user", "content": user_prompt}],
+                model=model,
+                temperature=temperature,
+                stream=True,
+                extra_body={
+                    "sampling_parameters": {"repetition_penalty": 1.2},
+                    "chat_template_kwargs": {"enable_thinking": thinking if thinking is not None else False}
+                },
+            )
+
+            full_response = ""
+            async for chunk in response:
+                delta = chunk.choices[0].delta.get("content")
+                if delta:
+                    full_response += delta
+                    yield translate_stream_response(delta)
+
+            # Validate response
+            if not full_response.strip():
+                yield translate_stream_response("[ERROR] Empty translation result.")
+            # 结束时发送特殊事件通知
+            yield "data: [DONE]\n\n"
+            return
+        except Exception as e:
+            if attempt == max_retries:
+                yield translate_stream_response(f"[ERROR] Translation failed after {max_retries} attempts: {str(e)}")
+                yield "data: [DONE]\n\n"
+                return
+            else:
+                await asyncio.sleep(1.5)  # Wait before retrying
+                continue
