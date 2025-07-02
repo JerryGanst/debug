@@ -1,0 +1,21 @@
+# vLLM 0.9.1 · 4×H20 (96 GB) · Qwen3-30B-A3B-FP8 · 32 768 tokens 原生上下文
+host: "0.0.0.0"
+port: 6392                       # 避免与 32B 服务端口冲突
+uvicorn-log-level: "info"
+
+served-model-name: "Qwen3-30B-A3B"
+
+# —— 并行与精度 ——
+tensor-parallel-size: 4          # 每张 H20 负责 1/4 张量并行
+pipeline-parallel-size: 1
+# dtype: "auto"                # vLLM 自动识别并保持权重量化为 FP8
+# kv-cache-dtype: "fp8"           # 启用 FP8 KV-Cache
+
+# # —— 显存与上下文配置 ——
+# gpu-memory-utilization: 0.92     # 每卡保留 ≈ 8 GB 缓冲区，稳定性优先
+# max_model_len: 32768             # 模型原生上下文
+# # 如需 131 072 tokens，可在启动命令后加 --rope-scaling '{"rope_type":"yarn","factor":4.0,"original_max_position_embeddings":32768}'
+
+# # —— 批处理控制 ——
+# max_num_seqs: 80                 # MoE 激活动参少，可把并发从 64 ↑ 到 80
+# max_num_batched_tokens: 150000   # 按 0.92 显存预算粗估（可再微调）

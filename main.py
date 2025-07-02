@@ -141,15 +141,15 @@ async def process_summary(request: QueryRequest):
     return summarize(request)
 
 
-@app.post("/translate", response_model=TranslationResponse, response_class=JSONResponse)
+@app.post("/translate")
 async def process_translation(request: TranslationRequest):
+    # Only SSE (Server-Sent Events) streaming response is supported for translation.
     SUPPORTED_LANGUAGES = ["中文", "英文", "越南语", "西班牙语"]
-    # 检查 target_language 是否在支持的语种列表中
+
     if request.target_language not in SUPPORTED_LANGUAGES:
         error_message = f"不支持的语种: {request.target_language}。支持的语种有: {', '.join(SUPPORTED_LANGUAGES)}"
         return JSONResponse(status_code=400, content={"error": error_message})
 
-    # 检查输入文本的token数
     token_count = token_counter.count_text(request.source_text)
     if token_count > token_counter.token_limit:
         return JSONResponse(
@@ -161,8 +161,8 @@ async def process_translation(request: TranslationRequest):
             }
         )
 
-    # 继续翻译处理
-    return translate(request)
+    # Do NOT use await here; translate is an async generator for SSE
+    return StreamingResponse(translate(request), media_type="text/event-stream")
 
 
 @app.post("/similarity", response_model=SimilarityResponse)

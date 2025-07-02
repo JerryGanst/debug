@@ -2,13 +2,20 @@ import json
 import textwrap
 from pydantic import BaseModel
 from typing import Dict
+from openai import OpenAI
+import asyncio
 
-from agents.ask_agent import ask_local_agent
 from configs.load import load_config, ModelRouter
 from utils.glossary.glossary import glossary_extract
 
 class TranslationResponse(BaseModel):
     translation_result: str  # 翻译结果
+    
+def translate_stream_response(content: str) -> str:
+    # 你可以定义一个简单的 Pydantic 模型用于统一数据格式
+    response_data = {"translation_result": content}
+    json_str = json.dumps(response_data, ensure_ascii=False)
+    return f"data: {json_str}\n\n"
 
 
 class TranslationRequest(BaseModel):
@@ -25,15 +32,7 @@ LANG_MAP: Dict[str, str] = {
     "西班牙语": "Spanish",
 }
 
-def _build_chatml_prompt(system_block: str, assistant_block: str, user_block: str) -> str:
-    """返回符合 Qwen3 ChatML 的三段式 prompt"""
-    return (
-        f"<|system|>\n{system_block}\n"
-        f"<|assistant|>\n{assistant_block}\n"
-        f"<|user|>\n{user_block}"
-    )
-
-def translate(request: TranslationRequest):
+async def translate(request: TranslationRequest):
     config = load_config()
     router = ModelRouter(config)
     source_text = request.source_text
@@ -57,7 +56,7 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
 • Always and only translate natural-language content into **{target_language}**
 
 ──────────────────────────── 2. MARKDOWN REFERENCE ────────────────────────────
-• Table       : | col A | col B | … |           (+ second line of --- separators)
+• Table       : | col A | col B | … |           (+ second line of --- separators)
 • Headings    : # H1 ‖ ## H2 ‖ ### H3 …
 • Lists       : - item  ‖ * item  ‖ 1. item (preserve nesting/indent)
 • Code        : ```lang … ``` for blocks; `inline code` for snippets
@@ -65,7 +64,6 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
 • Bold/Italic : **bold**  ‖  *italic*
 • Math        : leave anything inside $…$ or $$…$$ untouched
 • URLs        : never translate or modify
-• New Line    : use <br> to indicate end of a line
 
     """)
     # 3. Assistant prompt（Glossary 部分）
@@ -78,22 +76,63 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
 
     # 4. User prompt（包裹原文）
     user_prompt = textwrap.dedent(
-        f"""***SOURCE_TEXT_BEGIN***\n{source_text}\n***SOURCE_TEXT_END***
-        #BELOW IS FINAL REMINDER, PLEASE DO NOT TRANSLATE.#"""
+        f"""***SOURCE_TEXT_BEGIN***\n{source_text}\n***SOURCE_TEXT_END***"""
     )
-    
-    chatml_prompt = _build_chatml_prompt(system_prompt, assistant_prompt, user_prompt)
-    
-    # 调用本地 LLM
-    answer_dict = (
-        ask_local_agent(
-            prompt=chatml_prompt,
-            response_type=TranslationResponse,
-            api_key=router.get_model_config("translation").get("key", "SOME_KEY"),
-            api_base=router.get_model_config("translation").get("endpoint"),
-            temperature=router.get_model_config("translation").get("temperature", 0.0),
-            thinking = router.get_model_config("translation").get("thinking"),
-        )
-        .get("answer")
-    )
-    return answer_dict
+
+    config = router.get_model_config("translation")
+    api_key = config.get("key", "SOME_KEY")
+    api_base = config.get("endpoint")
+    thinking = config.get("thinking", False)
+    temperature = config.get("temperature", 0.2)
+
+    # Retry logic
+    max_retries = 3
+    attempt = 1
+    while attempt <= max_retries:
+        data_yielded = False
+        try:
+            client = OpenAI(api_key=api_key, base_url=api_base)
+            models = client.models.list()
+            model = models.data[0].id
+
+            response = client.chat.completions.create(
+                messages=[{"role": "system", "content": system_prompt},
+                          {"role": "assistant", "content": assistant_prompt},
+                          {"role": "user", "content": user_prompt}],
+                model=model,
+                temperature=temperature,
+                stream=True,
+                extra_body={
+                    "sampling_parameters": {"repetition_penalty": 1.2},
+                    "chat_template_kwargs": {"enable_thinking": thinking if thinking is not None else False}
+                },
+            )
+
+            full_response = ""
+            for chunk in response:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    full_response += delta
+                    yield translate_stream_response(delta)
+                    data_yielded = True
+
+            # Validate response
+            if not full_response.strip():
+                yield translate_stream_response("[ERROR] Empty translation result.")
+            # 结束时发送特殊事件通知
+            yield "data: [DONE]\n\n"
+            return
+        except Exception as e:
+            if data_yielded:
+                # If we've already yielded data, do not retry, just finish the stream with error
+                yield translate_stream_response(f"[ERROR] Translation interrupted: {str(e)}")
+                yield "data: [DONE]\n\n"
+                return
+            elif attempt == max_retries:
+                yield translate_stream_response(f"[ERROR] Translation failed after {max_retries} attempts: {str(e)}")
+                yield "data: [DONE]\n\n"
+                return
+            else:
+                await asyncio.sleep(1.5)  # Wait before retrying
+                attempt += 1
+                continue

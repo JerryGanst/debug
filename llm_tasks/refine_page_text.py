@@ -43,6 +43,7 @@ def refine_text_with_llm(original_text: str):
             {original_text}
             ####待处理文本结束####
             
+            ## 注意：如果待处理文本是乱码，直接返回"本页内容为乱码"
         """
 
 

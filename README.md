@@ -47,6 +47,7 @@ pip install -r "requirements.txt"
   - uv pip install vllm --torch-backend=auto
 ```
 1.4 启动 vllm 服务
+qwen3 A100
 ```bash
 CUDA_VISIBLE_DEVICES=0 vllm serve /root/modelscope_models/Qwen_Qwen3-32B-FP8 \
   --config /opt/rag-projects/rag-it/luxshare-ai-rag/vllm/qwen3_32b_fp8_a100.yaml \
@@ -54,6 +55,28 @@ CUDA_VISIBLE_DEVICES=0 vllm serve /root/modelscope_models/Qwen_Qwen3-32B-FP8 \
   --enable-auto-tool-choice \
   --tool-call-parser hermes
 ```
+qwen3 h20*4
+```bash
+CUDA_VISIBLE_DEVICES=4,5,6,7 \
+vllm serve /mnt/ai_data/models/huggingface_models/Qwen_Qwen3-32B-FP8 \
+  --config /mnt/ai_data/models/qwen3_32b_32k_on_H20.yaml \
+  --reasoning-parser qwen3 \
+  --enable-auto-tool-choice \
+  --tool-call-parser hermes \
+#  --chat-template /mnt/ai_data/models/qwen3_nonthinking.jinja
+```
+
+qwen3 h20*4
+```bash
+CUDA_VISIBLE_DEVICES=4,5,6,7 \
+vllm serve /mnt/ai_data/models/huggingface_models/Qwen_Qwen3-30B-A3B-FP8 \
+  --config /mnt/ai_data/models/qwen3_30b_a3b_32k_on_H20.yaml \
+  --reasoning-parser qwen3 \
+  --enable-auto-tool-choice \
+  --tool-call-parser hermes \
+  --enable-expert-parallel
+```
+
 1.5 至此，若显示
 INFO:     Started server process [581611]
 INFO:     Waiting for application startup.
