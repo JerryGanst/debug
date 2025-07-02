@@ -147,15 +147,19 @@ async def rag(req: RAGRequest):
 
     cfg = model_router.get_model_config("personal_knowledge_base", req.model)
 
+    # Use .get() with defaults to avoid KeyError for missing keys in old/incomplete configs
+    model_name = cfg.get("model_name", "default")  # Default to 'default' if missing
+    thinking = cfg.get("thinking", False)  # Default to False if missing
+
     llm = ChatOpenAI(
         base_url=cfg["endpoint"],
         api_key=cfg["key"],
-        model=cfg["model_name"],
+        model=model_name,
         temperature=cfg["temperature"],
         extra_body={
             "presence_penalty": 0.3,  # 鼓励新信息
             "repetition_penalty": 1.1,  # vLLM 支持，减少复读
-            "chat_template_kwargs": {"enable_thinking": cfg["thinking"]},
+            "chat_template_kwargs": {"enable_thinking": thinking},
         },
     )
 
@@ -173,7 +177,7 @@ async def rag(req: RAGRequest):
             "   - ## 示例 / 类比（≥1 个，便于理解）  \n"
             "   - ## 注意事项（风险、限制）  \n"
             "   - ## 结论（重申核心 + 下一步建议）  \n"
-            "3. 若资料不足，请在『注意事项』声明“不确定”并提出后续调查方向。\n\n"
+            "3. 若资料不足，请在『注意事项』声明\"不确定\"并提出后续调查方向。\n\n"
             "### 资料\n"
             "{context}\n\n"
             "### 用户问题\n"

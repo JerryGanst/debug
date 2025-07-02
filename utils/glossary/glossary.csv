@@ -27,7 +27,7 @@ Export,导出,Xuất ra
 FunctionMenu,功能菜单,Menu chức năng
 Icon,图标,Biểu tượng
 Import,导入,Nhập vào
-ImportFail,导入失败,文件不存在,Nhập thất bại, tệp không tồn tại
+ImportFail,"导入失败,文件不存在","Nhập thất bại, tệp không tồn tại"
 IsDefault,是否默认,Có mặc định không
 JobName,职位,Chức vụ
 LastLoginTime,最后登录时间,Thời gian đăng nhập cuối
@@ -225,7 +225,7 @@ IQCStaff_CurrentOrg,当前操作组织,Tổ chức thao tác hiện tại
 IQCStaff_BUName,所属Bu,Thuộc BU
 IQCStaff_DeptName,部门名称,Tên phòng ban
 IQCStaff_UserName,姓名,Họ và tên
-IQCStaff_Msg_Delimited,多个工号按,分割,Nhiều mã công nhân ngăn cách bằng dấu phẩy (,)
+IQCStaff_Msg_Delimited,"多个工号按,分割","Nhiều mã công nhân ngăn cách bằng dấu phẩy (,)"
 IQCStaff_Remove,移出,Di chuyển ra ngoài
 IQCStaff_BatchUpdateRole,批量修改角色,Chỉnh sửa vai trò hàng loạt
 IQCStaff_BatchUpdatePlant,批量修改工厂,Chỉnh sửa Công xưởng hàng loạt
@@ -243,12 +243,12 @@ IQCStaff_BatchUpdate,批量修改,Chỉnh sửa hàng loạt
 IQCStaff_Update,修改,Chỉnh sửa
 IQCStaff_Name,名称,Tên
 IQCStaff_Desc,描述,Mô tả
-IQCStaff_Msg_AllRight,IQC管理员有全部权限,不能调整角色,Quản trị viên IQC có toàn quyền, không thể chỉnh sửa vai trò
+IQCStaff_Msg_AllRight,"IQC管理员有全部权限,不能调整角色","Quản trị viên IQC có toàn quyền, không thể chỉnh sửa vai trò"
 IQCStaff_PlantFollowOrg,工厂跟随组织,Công xưởng theo tổ chức
 IQCStaff_NewPassword,设置新密码,Đặt mật khẩu mới
 IQCStaff_PasswordRule,密码规则,Quy tắc mật khẩu
-IQCStaff_Msg_PasswordRule,数字、大写字母、小写字母、符号至少包含3种，且长度不少于14位,Chứa ít nhất 3 loại: số, chữ hoa, chữ thường, ký hiệu và độ dài không dưới 14 ký tự
-IQCStaff_Msg_NoPassword,不设置新密码,不需要填,Không đặt mật khẩu mới, không cần điền
+IQCStaff_Msg_PasswordRule,数字、大写字母、小写字母、符号至少包含3种，且长度不少于14位,"Chứa ít nhất 3 loại: số, chữ hoa, chữ thường, ký hiệu và độ dài không dưới 14 ký tự"
+IQCStaff_Msg_NoPassword,"不设置新密码,不需要填","Không đặt mật khẩu mới, không cần điền"
 IQCStaff_IQCOrg,IQC组织,Tổ chức IQC
 IQCStaff_SAPPlant,SAP工厂,Công xưởng SAP
 IQCModel_Plant,工厂,Công xưởng
@@ -296,7 +296,7 @@ IQCMatManage_DocumentVer,版本,Phiên bản
 IQCMatManage_DocumentDesc,文档描述,Mô tả tài liệu
 IQCMatManage_DocumentDetail,文档详情,Chi tiết tài liệu
 IQCMatManage_RecordNotFound,未查询到数据,Không tìm thấy dữ liệu
-IQCMatManage_Msg,请检查账号密码是否正确，如都正确您可能没有权限查看该内容,Vui lòng kiểm tra xem tài khoản và mật khẩu đã chính xác chưa, nếu đã đúng bạn có thể không có quyền truy cập nội dung này
+IQCMatManage_Msg,请检查账号密码是否正确，如都正确您可能没有权限查看该内容,"Vui lòng kiểm tra xem tài khoản và mật khẩu đã chính xác chưa, nếu đã đúng bạn có thể không có quyền truy cập nội dung này"
 IQCSIPVer_Plant,SAP工厂,Công xưởng SAP
 IQCSIPVer_MaterialNo,料号,Mã liệu
 IQCSIPVer_SPINo,SIP编号,SIP số hiệu
@@ -796,11 +796,11 @@ IQC_IQCMatBatch_CJJYD,创建检验单,Tạo phiếu kiểm tra
 IQC_IQCMatBatch_QRYCJJYD,确认要创建检验单?,Xác nhận tạo phiếu kiểm tra?
 IQC_IQCMatBatch_BG,报告,Báo cáo
 IQC_IQCMatBatch_JZCG,加载成功,Tải thành công
-IQC_PUBLIC_DGLHCXYDHGK,多个料号查询以逗号隔开，例：料号A,料号B,Nhiều Mã liệu tìm kiếm cách nhau bằng dấu phẩy, ví dụ: Mã liệu A, Mã liệu B
-IQC_IQCMatBatch_JCDYSCXM,检测到有送测项目,是否执行送测?,Phát hiện có hạng mục gửi kiểm tra, có thực hiện gửi kiểm tra không?
-IQC_IQCMatBatch_DGSJCXYDHGK,多个数据查询以逗号隔开，例：数据A,数据B,Nhiều dữ liệu tìm kiếm cách nhau bằng dấu phẩy, ví dụ: Dữ liệu A, Dữ liệu B
+IQC_PUBLIC_DGLHCXYDHGK,"多个料号查询以逗号隔开，例：料号A,料号B","Nhiều Mã liệu tìm kiếm cách nhau bằng dấu phẩy, ví dụ: Mã liệu A, Mã liệu B"
+IQC_IQCMatBatch_JCDYSCXM,"检测到有送测项目,是否执行送测?","Phát hiện có hạng mục gửi kiểm tra, có thực hiện gửi kiểm tra không?"
+IQC_IQCMatBatch_DGSJCXYDHGK,"多个数据查询以逗号隔开，例：数据A,数据B","Nhiều dữ liệu tìm kiếm cách nhau bằng dấu phẩy, ví dụ: Dữ liệu A, Dữ liệu B"
 IQC_IQCMatBatch_CRJYP,插入检验批,Chèn lô kiểm tra
-IQC_IQCMatBatch_GCZJCZJYDZJYZ,该操作将重置检验单至检验中,确认要操作?,Thao tác này sẽ đặt lại phiếu kiểm tra về trạng thái đang kiểm tra, xác nhận thao tác?
+IQC_IQCMatBatch_GCZJCZJYDZJYZ,"该操作将重置检验单至检验中,确认要操作?","Thao tác này sẽ đặt lại phiếu kiểm tra về trạng thái đang kiểm tra, xác nhận thao tác?"
 IQC_IQCMatBatch_ALL,所有,Tất cả
 IQC_IQCMatBatch_YouIQCDH,有IQC单号,Có số IQC
 IQC_IQCMatBatch_WuIQCDH,无IQC单号,Không có số IQC
@@ -840,26 +840,26 @@ IQC_IQCMatBatch_QRYSC,确认要删除,Xác nhận xóa
 IQC_IQCMatBatch_FPSL,复判数量,Số lượng đánh giá lại
 IQC_IQCMatBatch_CQPD,澄清判定,Làm rõ đánh giá
 IQC_IQCMatBatch_LCJY,量测检验,Kiểm tra đo lường
-IQC_IQCMatBatch_HSNRQSC,灰色内容请删除,重新输入数字,Nội dung màu xám vui lòng xóa, nhập lại số
+IQC_IQCMatBatch_HSNRQSC,"灰色内容请删除,重新输入数字","Nội dung màu xám vui lòng xóa, nhập lại số"
 IQC_IQCMatBatch_DYBLKW,对应不良库位,Vị trí kho lỗi tương ứng
 IQC_IQCMatBatch_LCSL,量测数量,Số lượng đo lường
-IQC_IQCMatBatch_CJSXYCYSSYCJSWZ,抽检数小于抽样数时以抽检数为准,Khi số lượng mẫu nhỏ hơn số lượng lấy mẫu, ưu tiên theo số lượng mẫu
+IQC_IQCMatBatch_CJSXYCYSSYCJSWZ,抽检数小于抽样数时以抽检数为准,"Khi số lượng mẫu nhỏ hơn số lượng lấy mẫu, ưu tiên theo số lượng mẫu"
 IQC_IQCMatBatch_HG,合格,Đạt yêu cầu
 IQC_IQCMatBatch_BHG,不合格,Không đạt yêu cầu
-IQC_IQCMatBatch_WWCYZNZPRKBNFP,委外、重验 只能整批入库，不能分批,Gia công ngoài, kiểm tra lại chỉ có thể nhập kho toàn bộ, không thể phân lô
+IQC_IQCMatBatch_WWCYZNZPRKBNFP,委外、重验 只能整批入库，不能分批,"Gia công ngoài, kiểm tra lại chỉ có thể nhập kho toàn bộ, không thể phân lô"
 IQC_PUBLIC_KB,库别,Loại kho
 IQC_IQCMatBatch_XT,系统,Hệ thống
 IQC_IQCMatBatch_KBMS,库别描述,Mô tả loại kho
 IQC_IQCMatBatch_QXZJG,请选择检验结果,Vui lòng chọn kết quả kiểm tra
 IQC_IQCMatBatch_QDYTJ,确定要提交？,Xác nhận nộp?
 IQC_IQCMatBatch_QqrMRBSFWCQH,请确认MRB单是否完成签核？,Vui lòng xác nhận phiếu MRB đã hoàn tất ký duyệt?
-IQC_IQCMatBatch_SJYGXJMJZZSX,数据已被更改，界面将自动刷新,Dữ liệu đã thay đổi, giao diện sẽ tự động làm mới
+IQC_IQCMatBatch_SJYGXJMJZZSX,数据已被更改，界面将自动刷新,"Dữ liệu đã thay đổi, giao diện sẽ tự động làm mới"
 IQC_IQCMatBatch_GYZZ,供应&制造,Cung ứng & sản xuất
 IQC_PUBLIC_IQCNO,IQC单号,Số IQC
 IQC_IQCMatBatch_SWMSM,扫WMS码,Quét mã WMS
-IQC_IQCMatBatch_LKWAKWB,例：库位A,库位B,Ví dụ: Vị trí kho A, Vị trí kho B
+IQC_IQCMatBatch_LKWAKWB,"例：库位A,库位B","Ví dụ: Vị trí kho A, Vị trí kho B"
 IQC_IQCMatBatch_SHGC,收货工厂,Công xưởng nhận hàng
-ImportFial,导入失败,文件不存在,Nhập thất bại, tệp không tồn tại
+ImportFial,"导入失败,文件不存在","Nhập thất bại, tệp không tồn tại"
 YouWantToSubmitTheSelectedRecorYouWantToSubmitTheSelectedRecords,确定要提交所选择的记录吗？,Xác nhận nộp các bản ghi đã chọn?
 IQC_IQCMatBatch_LJBH,料件编号,Số mã vật liệu
 IQC_IQCMatBatch_PM,品名,Tên vật liệu
@@ -897,7 +897,7 @@ IQC_IQCCheck_HS,回审,Xem lại
 IQC_IQCCheck_luruSN,录入SN,Nhập SN
 IQC_IQCCheck_ZC,正常,Bình thường
 IQC_IQCCheck_CY,重验,Kiểm tra lại
-IQC_IQCCheck_DQGXDHZCZJAD,当前勾选单号中存在结案单，您有超级删除权限请谨慎使用，确定要删除吗？,Số đơn đã chọn hiện tại có đơn đã kết thúc, bạn có quyền xóa siêu cấp, vui lòng cẩn thận khi sử dụng, xác nhận xóa?
+IQC_IQCCheck_DQGXDHZCZJAD,当前勾选单号中存在结案单，您有超级删除权限请谨慎使用，确定要删除吗？,"Số đơn đã chọn hiện tại có đơn đã kết thúc, bạn có quyền xóa siêu cấp, vui lòng cẩn thận khi sử dụng, xác nhận xóa?"
 IQC_IQCCheck_WW,委外,Gia công ngoài
 IQC_IQCCheck_WJA,未结案,Chưa kết thúc
 IQC_IQCCheck_JYDDC,检验单导出,Xuất phiếu kiểm tra
@@ -999,7 +999,7 @@ IQC_PUBLIC_GB,关闭,Đóng
 IQC_IQCCheck_GH,工号,Mã nhân viên
 IQC_IQCCheck_XM,姓名,Họ tên
 IQC_IQCCheck_TG,通过,Đồng ý
-IQC_IQCCheck_GCZJSXJM,该操作将刷新介面，请先保存数据以免数据丢失，确认要操作？,Thao tác này sẽ làm mới giao diện, vui lòng lưu dữ liệu trước để tránh mất dữ liệu. Bạn có chắc muốn tiếp tục không?
+IQC_IQCCheck_GCZJSXJM,该操作将刷新介面，请先保存数据以免数据丢失，确认要操作？,"Thao tác này sẽ làm mới giao diện, vui lòng lưu dữ liệu trước để tránh mất dữ liệu. Bạn có chắc muốn tiếp tục không?"
 IQC_IQCCheck_FPSL,复判数量,Số lượng đánh giá lại
 IQC_IQCCheck_CQPD,澄清判定,Làm rõ đánh giá
 IQC_IQCCheck_LRSL,录入数量,Số lượng nhập
@@ -1014,7 +1014,7 @@ IQC_IQCCheck_YS,允收,Chấp nhận
 IQC_IQCCheck_PT,批退,Trả lại lô
 IQC_IQCCheck_ZPSqeFPCLR,指派SQE复判处理人,Chỉ định người xử lý đánh giá lại SQE
 IQC_IQCCheck_JYDJLZDsqeFPCLR,检验单将流转到 SQE复判处理人,Phiếu kiểm tra sẽ chuyển đến người xử lý đánh giá lại SQE
-IQC_IQCCheck_BFSYJTZQDYCZ,并发送通知邮件,确定要操作？,Gửi email thông báo, bạn có chắc muốn tiếp tục không?
+IQC_IQCCheck_BFSYJTZQDYCZ,"并发送通知邮件,确定要操作？","Gửi email thông báo, bạn có chắc muốn tiếp tục không?"
 IQC_IQCCheck_JSYJTZ,拒收邮件通知,Thông báo email từ chối nhận
 IQC_IQCCheck_QSR,请输入,Vui lòng nhập
 IQC_IQCCheck_GEZHI,个值,Giá trị
@@ -1048,7 +1048,7 @@ IQC_IQCCheck_ZZ,终止,Dừng
 IQC_IQCCheck_ZK,转库,Chuyển kho
 IQC_IQCCheck_RQLX,日期类型,Loại ngày
 IQC_IQCMatBatch_SYJJ,所有结果,Tất cả kết quả
-IQC_IQCCheck_DLHADHFG,多料号按,分割,Nhiều mã vật liệu cách nhau bằng dấu ","
+IQC_IQCCheck_DLHADHFG,多料号按逗号分割,Nhiều mã vật liệu cách nhau bằng dấu phẩy
 IQC_IQCCheck_GNBL,功能不良,Lỗi chức năng
 IQC_IQCCheck_BLDL,不良大类,Lỗi lớn
 IQC_IQCMatBatch_WLYC,网络异常,Lỗi mạng
@@ -1075,7 +1075,7 @@ IQC_IQCCheck_DCJGFZHZ,导出结果分组汇总,Xuất kết quả theo nhóm t�
 IQC_IQCCheck_GONG,共,Tổng số
 IQC_IQCCheck_TJL,条记录,Ghi chép
 IQC_PUBLIC_QTY,数量,Số lượng
-IQC_IQCCheck_LLPPTLQST,来料批批退率趋势图(%),Biểu đồ xu hướng tỷ lệ trả lại lô hàng nhập (%)
+IQC_IQCCheck_LLPPTLQST,来料批批退率趋势图(%),Biểu đồ xu hướng tỷ lệ trả lại lô hàng nhập (%)
 IQC_IQCCheck_CJPS,抽检批数,Số lô lấy mẫu
 IQC_IQCCheck_PTL,批退率,Tỷ lệ trả lại lô
 IQC_IQCCheck_PTPS,批退批数,Số lô bị trả lại
@@ -1139,7 +1139,7 @@ IQCOrg_NoShow,不显示,Không hiển thị
 IQC_IQCOrg_InputSarch,输入搜索,Nhập tìm kiếm
 IQC_IQCStaff_JOIN,加入到,Thêm vào
 IQC_IQCStaff_QRYJ,确认要将,Xác nhận muốn thêm vào
-IQC_IQCStaff_DontSetPsd,不设置新密码,不需要填,Không cài đặt mật khẩu mới, không cần nhập
+IQC_IQCStaff_DontSetPsd,"不设置新密码,不需要填","Không cài đặt mật khẩu mới, không cần nhập"
 IQC_RoleWillBeReclain,角色将被回收,Vai trò sẽ bị thu hồi
 IQC_IQCEmailGroup_EmptyMeans,留空表示应用所有工厂,Để trống để áp dụng cho tất cả các Công xưởng
 IQC_PUBLIC_Hour,小时,Giờ
@@ -1157,16 +1157,16 @@ IQC_IQCBatchFileSize_InputBatchNoShowMatInfo,输入检验批号自动带出物�
 IQC_IQCMatBatch_DQRQ,到期日期,Ngày hết hạn
 IQC_Public_QDYSCGWJ,确定要删除该文件,Xác nhận muốn xóa tệp này
 IQCAutoGRMaintain_Msg_StockIN,确认要操作入库?,Xác nhận muốn thao tác nhập kho?
-IQC_IQCMaterialErrorTrace_IsNotPending,不是待处理或驳回状态，无法处理,Không phải trạng thái đang xử lý hoặc từ chối, không thể xử lý
-IQC_IQCMaterialErrorTrace_IsNotPendingReview,不是待审核状态，无法审核,Không phải trạng thái đang chờ phê duyệt, không thể phê duyệt
-IQC_IQCMaterialErrorTrace_IsNotToBeAssign,不是待指派状态，无法指派,Không phải trạng thái đang chờ chỉ định, không thể chỉ định
-IQC_IQCMaterialErrorTrace_YJCDCFFSWT,已检测到重复发生问题,单号,Phát hiện vấn đề xảy ra lại, mã số đơn
+IQC_IQCMaterialErrorTrace_IsNotPending,不是待处理或驳回状态，无法处理,"Không phải trạng thái đang xử lý hoặc từ chối, không thể xử lý"
+IQC_IQCMaterialErrorTrace_IsNotPendingReview,不是待审核状态，无法审核,"Không phải trạng thái đang chờ phê duyệt, không thể phê duyệt"
+IQC_IQCMaterialErrorTrace_IsNotToBeAssign,不是待指派状态，无法指派,"Không phải trạng thái đang chờ chỉ định, không thể chỉ định"
+IQC_IQCMaterialErrorTrace_YJCDCFFSWT,"已检测到重复发生问题,单号","Phát hiện vấn đề xảy ra lại, mã số đơn"
 IQC_PUBLIC_PleaseUploadFile,请上传附件!,Vui lòng tải lên tệp đính kèm!
 IQC_PUBLIC_JYRQ,检验日期,Ngày kiểm tra
 Nobtain,证书编号不能相同,Mã chứng nhận không thể trùng lặp
 IQCSIPByLaw_LowerLimitEmpty,下限(空为无限),Giới hạn dưới (trống là không giới hạn)
 IQCSIPByLaw_UpperLimitEmpty,上限(空为无限),Giới hạn trên (trống là không giới hạn)
-IQCSIPCommon_SIPITEMISEMPTY,SIP项目为空，无法提交,Mục SIP trống, không thể gửi
+IQCSIPCommon_SIPITEMISEMPTY,SIP项目为空，无法提交,"Mục SIP trống, không thể gửi"
 IQCSIPCommon_SIPZZX,SIP总则项,Mục tổng quát SIP
 IQC_PUBLIC_DELETHEDATA,确定要删除该数据？,Xác nhận muốn xóa dữ liệu này?
 IQC_PUBLIC_DELETHEPROJECT,确定要删除该项目?,Xác nhận muốn xóa mục này?
@@ -1174,12 +1174,12 @@ IQCSIPCommon_NotAllowEditInThisState,此状态下不允许编辑,Không cho phé
 IQCSIPCommon_Update,更新,Cập nhật
 IQCSIPCommon_MatInfoManage,物料信息管理,Quản lý thông tin vật liệu
 IQCSIPCommon_SIPXZX,SIP细则项,Mục chi tiết SIP
-IQCSIPBylaw_ChangeTheValue,变更该值将刷新介面，请先保存数据，是否已保存？,Thay đổi giá trị này sẽ làm mới giao diện, vui lòng lưu dữ liệu trước, đã lưu chưa?
-IQCSIPBylaw_NormalRefesh,正常刷新请稍等...,Làm mới bình thường, vui lòng đợi...
+IQCSIPBylaw_ChangeTheValue,变更该值将刷新介面，请先保存数据，是否已保存？,"Thay đổi giá trị này sẽ làm mới giao diện, vui lòng lưu dữ liệu trước, đã lưu chưa?"
+IQCSIPBylaw_NormalRefesh,正常刷新请稍等...,"Làm mới bình thường, vui lòng đợi..."
 IQCSIPBylaw_PleaseUploadPicture,请上传图片,Vui lòng tải lên hình ảnh
 IQCSIPBylaw_PleaseUploadStructPicture,请上传结构样图片,Vui lòng tải lên hình ảnh cấu trúc
 AddNew,新增,Thêm mới
-IQCAQL_SamplePlanList,抽样计划表,樣本数大于或等于批量数時，則使用100%檢驗.检验数量=批量数,Kế hoạch lấy mẫu, số mẫu lớn hơn hoặc bằng số lô thì sử dụng kiểm tra 100%, số lượng kiểm tra = số lô
+IQCAQL_SamplePlanList,"抽样计划表,樣本数大于或等于批量数時，則使用100%檢驗.检验数量=批量数","Kế hoạch lấy mẫu, số mẫu lớn hơn hoặc bằng số lô thì sử dụng kiểm tra 100%, số lượng kiểm tra = số lô"
 IQCMatManage_ConfirmOperate,确认是否执行该操作？,Xác nhận có thực hiện thao tác này không?
 IQCMatManage_SapAccount,SAP账号,Tài khoản SAP
 IQCMatManage_SapPassword,SAP密码,Mật khẩu SAP
@@ -1213,8 +1213,8 @@ MeasureSetting,量测设置,Cài đặt đo lường
 OmmMeasurer,OMM量测人员,Nhân viên OMM đo lường
 ReceivingPerson,收料人,Nhân viên nhận mẫu
 ReceivingSetting,收料设置,Cài đặt nhận mẫu
-NoExaprove,流程已结束,不允许操作,Quy trình đã kết thúc, không cho phép thao tác
-NoExamine,审批人不正确，不允许操作,Người phê duyệt không đúng, không cho phép thao tác
+NoExaprove,"流程已结束,不允许操作","Quy trình đã kết thúc, không cho phép thao tác"
+NoExamine,审批人不正确，不允许操作,"Người phê duyệt không đúng, không cho phép thao tác"
 SapDraft,只能是草稿状态才允许修改,Chỉ cho phép chỉnh sửa trong trạng thái bản nháp
 Day,日,Ngày
 PI_CheckDate,点检日期,Ngày kiểm tra điểm
@@ -1250,3 +1250,108 @@ Scale,物料状态,Tình trạng vật liệu
 BADTYPE,异常类别,Loại bất thường
 IQC_IQCCheckFile_Attachment,附件,Tệp đính kèm
 IQC_Check_SaveFiles,确认保存文件？,Xác nhận lưu tệp?
+,P1端A面SAS线HB焊接,Hàn HB dây SAS mặt A đầu P1
+,P1端A面电子线HB焊接,Hàn HB dây điện tử mặt A đầu P1
+,P1端B面SAS线HB焊接,Hàn HB dây SAS mặt B đầu P1
+,P1端B面电子线HB焊接, Hàn HB dây điện tử mặt B đầu P1
+,P1端全检锡点,Toàn kiểm điểm thiếc đầu P1
+,T1测试,T1 test
+,P2端下排SAS线焊接,Hàn dây SAS hàng dưới đầu P2
+,P2端下排电子线HB焊接,Hàn HB dây điện tử hàng dưới đầu P2
+,P2端下排全检锡点,Toàn kiểm điểm hàn hàng dưới đầu P2
+,P2端上排SAS线HB焊接,Hàn HB dây SAS hàng trên đầu P2
+,P2端上排电子线HB焊接,Hàn HB dây điện tử hàng trên đầu P2
+,P2端上排全检锡点,Toàn kiểm điểm hàn hàng trên đầu P2
+,测试T2 ,Test T2
+,功能测试,Test công năng
+,P2端外模成型,Thành hình khuôn ngoài 1 đầu P2
+,P1端低压成型1,Ép thành hình 1 đầu P1
+,标签打印&粘贴,in tem & dán
+,2048测试,thí nghiệm 2048
+,高频测试,thí nghiệm cao tần
+,成品测试,thí nhiệm thành phẩm
+,烧录数据,sao lưu số liệu 
+,烧录检测,kiểm tra sao lưu
+,成品GZ端AOI检查,Kiểm tra AOI đầu GZ của thành phẩm
+,Riser连接器AOI检查,Test AOI  kết nối RISER
+,终检2&3,Kiểm cuối 2
+,扫描&包装,Quét mã&đóng gói
+,文件制作人,người biên soạn văn kiện
+,文件编码,MÃ số vặn kiện
+,当前版本,BẢN hiện tại
+,制作日期,ngày biên soạn	
+,总页数,tổng số trang
+,更新版本,bản mới cập nhật
+,修订日期,ngày sửa đổi
+,审核,xét duyệt			
+,样品,Hàng mẫu
+,增加Spacer铆压工序，增加平面度测试工序，图片细化描述，文字细化描述,"Bổ sung công đoạn tán đinh Spacer, thêm công đoạn kiểm tra độ phẳng, chi tiết hóa mô tả bằng hình ảnh và mô tả bằng văn bản."
+,更换所有图片、更换版本,"Tất cả hình ảnh,bản thay đổi"
+,增加一个贴Mylar工站,Thêm một trạm dán Mylar.
+,加Mylar工站料号不能通用，取消贴Mylar变更回原本版本内容,"Mã số vật liệu của trạm dán Mylar không thể dùng chung, hủy bỏ công đoạn dán Mylar và khôi phục nội dung phiên bản gốc."
+,更新版本，定义重点工站等,"Thay đổi bản,công đoạn trọng điểm"
+,LOGO变更，更新LOGO,"Thay đổi LOGO,Cập nhật LOGO"
+,2D工站增加检测导电胶是否漏装功能,Bổ sung chức năng kiểm tra xem keo dẫn điện có bị lắp sót tại trạm 2D.
+,手指套更换频率改为2H，气压范围调整为0.5~0.8,"Tần suất thay găng tay ngón tay được điều chỉnh thành 2 giờ, phạm vi áp suất khí được điều chỉnh thành 0.5~0.8."
+Luxshare,立讯技术,Luxshare
+,标准作业指导书,Bảng hướng dẫn thao tác tiêu chuẩn
+,机种名,Tên loại hàng
+,料号,Mã liệu
+,工站名称,Tên công đoạn
+,流程图,ảnh lưu trình
+,SOP制作人及日期,"Ngày tháng,người biên soạn SOP"
+,文件编号,Mã văn kiện
+,版本,Bản
+,站别,Công đoạn
+,开始,Băt đầu
+,裁切折弯端子,Cắt uốn cong đầu nối
+,组装下排端子,Lắp ráp hàng dưới đầu nối
+,组装&铆压SPACER,Lắp ráp và ép SPACER
+,组装上排端子,Lắp ráp hàng trên đầu nối
+,铆压上排端子,ép hàng trên đầu nối
+,组装&铆压塑胶,Lắp ráp và ép đinh tán nhựa
+,组装&铆压铁壳,Lắp ráp và ép vỏ sắt 
+,电测,TEST điện
+,组装、铆压导电胶,"Lắp ráp,ép keo dẫn điện"
+,CCD正位度/弹高测试,CCD căn chỉnh/TEST độ cao
+,镭雕D/C,Khắc Lazer D/C
+,外观检查,Ngoại quan kiểm tra
+,组装塑胶盖,Lắp ráp nép nhựa
+,平面度测试&卷包,Test độ cao bằng phẳng và cuộn bao
+,包装,Đóng gói
+,结束,Kết thúc
+,工站名称,Tên công đoạn
+,折铁壳,Gấp vỏ sắt
+,SOP制作人及日期,"Ngày tháng,người biên soạn SOP"
+,文件编号,Mã văn kiện
+,铁壳,vỏ sắt
+,手指套,bao tay ngón
+,品质注意事项（及客诉问题点,Hạng mục chú ý chất lượng
+,作业员需戴手指套，更换频率为2H/次或破损直接更换,"công nhân phải đeo bao tay ngón,tần suất thay đổi 2H/lần hoặc bị hỏng trục tiếp thay."
+,首件、每节检查5PCS产品，严格区分良品与不良品,"kiện đầu,mỗi tiết kiểm tra 5PCS sản phẩm,nghiêm chỉnh phân biệt sản phẩm đạt và không đạt."
+,铁壳不可有压伤、刮花、变形、脏污不良,"vỏ sắt không được ép dập,trầy xước,biến dạng,vết bẩn không đạt."
+,依实际生产成品料号选择铁壳（BOM）,Chọn vỏ sắt (BOM) theo mã thành phẩm thực tế trong sản xuất.
+,仪器设备治工具清单,"Danh sách thiết bị ,dụng cụ đồ gá"
+,作业步骤,Các bước thao tác
+,取铁壳料盘，将料盘按照流线方向放置于放置架上，装上固定盘，如图一,"Lấy khay vật liệu vỏ sắt, đặt khay theo hướng dòng chảy trên giá đỡ, lắp đĩa cố định như Hình 1."
+,将铁壳上下30°摇摆折下铁壳，装入周转盘内，流入下一工序，如图二。,"Lắc vỏ sắt lên xuống 30° để bẻ xuống, đặt vào khay luân chuyển, chuyển sang công đoạn tiếp theo như Hình 2."
+,"裁切折弯端子,cắt uốn cong đầu nối
+,重点工站,Công đoạn trọng điểm
+,作业员需戴手指套，更换频率为2H/次或破损直接更换""","công nhân phải đeo bao tay ngón,tần suất thay đổi 2H/lần hoặc bị hỏng trục tiếp thay."
+,气压范围0.5~0.8MPa；刀具更换频率：依《刀具寿命管制表》 ；依实际生产成品料号选择端子（BOM）,"Phạm vi áp suất không khí là 0,5 ~ 0,8MPa; tần số thay thế dụng cụ: theo 'Bảng kiểm soát tuổi thọ dụng cụ'; chọn đầu nối (BOM) theo mã thành phẩm trong thực tế sản xuất."
+,自动裁切、折弯机,"máy cắt tự động,máy uốn cong"
+,生技调试好机台，作业员取端子料盘，将端子料盘放置在机台上的固定位置，固定上固定盘，如图一；,"sau khi nhân viên điều chỉnh máy xong,công nhân lấy khay vật liệu đầu nối,đặt khay đầu nối vào cố định trên máy,cố định khay,như hình1"
+,"点击""启动""键，机台进行自动裁切、折弯作业，裁切、折弯完成的端子，流入下一工序，如图四。","Ấn nút 'khởi động'máy tự động vào cắt,thao tác uốn cong,cắt,uốn cong xong đầu nối,chuyển tiếp công đoạn tiếp theo,như hình 4"
+,组装下排端子,Lắp ráp hàng dưới đầu nối				
+,组装过程不要把端子头、锡脚碰变形,"trong quá trình lắp ráp,không được để đầu đầu nối ,chân thiếc biến dạng."
+,首件、每节检查5PCS组装完成的产品，检查端子是否有变形、少/歪PIN不良,"kiện đầu,mỗi tiết kiểm tra 5PCS lắp ráp hoàn thành phẩm,kiểm tra đầu nối có biến dạng hay không."
+,铆压治具,Đồ gá ép
+,取1PCS裁切折弯完成的端子，铆压治具，如图一、图二；,"Lấy 1 sản phẩm đầu nối cắt uốn cong hoàn chỉnh,đồ gá ép,như hình 1,hình 2."
+,将端子对准铆压治具定位孔装入治具内，注意端子头朝里、弹高朝上（组装过程不要把端子头、锡脚碰变形），如图二、图三；,"đặt đầu nối vào đúng vị trí đồ gá lắp vào trong đồ gá ,chú ý đầu đầu nối hướng vào trong,phần cao hướng lên(quá trình lắp ráp không được để đầu đầu nối,chân thiếc biến dạng),như hình 2,hình 3."
+,重复步骤2，将铆压治具的另一穴位也装入端子，如图五；,"Lặp lại bước 2 và lắp đồ gá đầu nối vào một bên còn lại của đồ gá tán đinh, như minh họa trong Hình 5;"
+,取盖板，将盖板定位孔对准治具定位柱装入治具上，将组装下排端子完成的铆压治具，流入下一工序，如图六。,"Lấy nắp đậy ,đặt nắp đậy vào đúng vị tr íCăn lỗ định vị của nắp che với trụ định vị của đồ gá. khuôn hướng lên trên,đưa sản phẩm đầu nối hoàn chỉnh lắp phía dưới đồ gá ép,chuyển tiếp cho công đoạn sau,như hình 6"
+,组装&铆压Spacer,Lắp ráp  và ép Spacer
+Spacer,Spacer,Spacer
+,上线前针对物料的规格和料号进行确认OK后方可上线,"Trước khi đưa vào dây chuyền, cần xác nhận thông số kỹ thuật và mã vật liệu OK, sau đó mới được lên chuyền."
+,"组装过程不要把端子头、锡脚碰变形,quá trình lắp ráp không được để đầu đầu nối","chân thiếc biến dạng"""
+,首件、每节检查5PCS铆压完成的产品，检查Spacer&端子是否压紧，端子无变形、少/歪PIN、Spacer无压伤不良；每2H使用刷子刷洗清洁铆压治具、铆压底座,"kiện đầu,mỗi tiết kiểm tra 5 sản phẩm.nghiêm khắc phân biệt sản phẩm đạt,không đạt.kiểm tra đầu nối và SPACER có ép chặt không,nhựa đầu nối không được ép xước,biến dạng không đạt. Mã PIN bị thiếu/lệch ,spacer không ép dập không đạt, cứ 2H sử dụng bàn chải vệ sinh đồ gá và đế ép"

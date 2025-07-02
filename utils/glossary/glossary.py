@@ -12,11 +12,13 @@ def glossary_extract(source_text: str, glossary_path: str | None = None) -> str:
     lines = extract_related(source_text, glossary)
     return "\n".join(f"- {line}" for line in lines)
 
+def safe_strip(val: str | None) -> str:
+    return val.strip() if isinstance(val, str) else ""
+
 def load_glossary(glossary_path: str | None = None) -> List[Tuple[str, str, str]]:
     if glossary_path:
         _path = Path(glossary_path)
     else:
-        # utils/glossary/glossary.py → utils/glossary/glossary.csv
         _path = Path(__file__).resolve().parent / "glossary.csv"
     
     if not _path.exists():
@@ -26,11 +28,21 @@ def load_glossary(glossary_path: str | None = None) -> List[Tuple[str, str, str]
         reader = csv.DictReader(f)
         if not {"en", "zh", "vi"}.issubset(reader.fieldnames or {}):
             raise ValueError("glossary.csv 必须包含列: en, zh, vi")
-        return [
-            (row["en"].strip(), row["zh"].strip(), row["vi"].strip())
-            for row in reader
-            if row["en"].strip() and row["zh"].strip() and row["vi"].strip()
-        ]
+
+        glossary: List[Tuple[str, str, str]] = []
+        for i, row in enumerate(reader, start=2):  # start=2 跳过表头
+            en = safe_strip(row.get("en"))
+            zh = safe_strip(row.get("zh"))
+            vi = safe_strip(row.get("vi"))
+
+            # 至少两个字段非空才保留
+            if sum(bool(x) for x in (en, zh, vi)) >= 2:
+                glossary.append((en, zh, vi))
+            else:
+                print(f"[WARN] 第{i}行跳过（非空列不足2）：{row}")
+
+    return glossary
+
 
 
 def extract_related(

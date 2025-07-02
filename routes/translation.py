@@ -2,8 +2,8 @@ import json
 import textwrap
 from pydantic import BaseModel
 from typing import Dict
+from openai import OpenAI
 
-from agents.ask_agent import ask_local_agent
 from configs.load import load_config, ModelRouter
 from utils.glossary.glossary import glossary_extract
 
@@ -24,14 +24,6 @@ LANG_MAP: Dict[str, str] = {
     "越南语": "Vietnamese",
     "西班牙语": "Spanish",
 }
-
-def _build_chatml_prompt(system_block: str, assistant_block: str, user_block: str) -> str:
-    """返回符合 Qwen3 ChatML 的三段式 prompt"""
-    return (
-        f"<|system|>\n{system_block}\n"
-        f"<|assistant|>\n{assistant_block}\n"
-        f"<|user|>\n{user_block}"
-    )
 
 def translate(request: TranslationRequest):
     config = load_config()
@@ -65,7 +57,6 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
 • Bold/Italic : **bold**  ‖  *italic*
 • Math        : leave anything inside $…$ or $$…$$ untouched
 • URLs        : never translate or modify
-• New Line    : use <br> to indicate end of a line
 
     """)
     # 3. Assistant prompt（Glossary 部分）
@@ -78,22 +69,33 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
 
     # 4. User prompt（包裹原文）
     user_prompt = textwrap.dedent(
-        f"""***SOURCE_TEXT_BEGIN***\n{source_text}\n***SOURCE_TEXT_END***
-        #BELOW IS FINAL REMINDER, PLEASE DO NOT TRANSLATE.#"""
+        f"""***SOURCE_TEXT_BEGIN***\n{source_text}\n***SOURCE_TEXT_END***"""
     )
+
+    config = router.get_model_config("translation")
     
-    chatml_prompt = _build_chatml_prompt(system_prompt, assistant_prompt, user_prompt)
+    api_key = config.get("key","SOME_KEY")
+    api_base = config.get("endpoint")
+    thinking = config.get("thinking")
+    temperature = 0.2
     
-    # 调用本地 LLM
-    answer_dict = (
-        ask_local_agent(
-            prompt=chatml_prompt,
-            response_type=TranslationResponse,
-            api_key=router.get_model_config("translation").get("key", "SOME_KEY"),
-            api_base=router.get_model_config("translation").get("endpoint"),
-            temperature=router.get_model_config("translation").get("temperature", 0.0),
-            thinking = router.get_model_config("translation").get("thinking"),
-        )
-        .get("answer")
+    
+    client = OpenAI(api_key=api_key, base_url=api_base)
+    models = client.models.list()
+    model = models.data[0].id
+    
+    response = client.chat.completions.create(
+        messages=[{"role": "system", "content": system_prompt},
+                  {"role": "assistant", "content": assistant_prompt},
+                  {"role": "user", "content": user_prompt}],
+        model=model,
+        temperature=temperature,
+        extra_body={
+            "sampling_parameters": {"repetition_penalty": 1.2},
+            "chat_template_kwargs": {"enable_thinking": thinking}
+        },
     )
-    return answer_dict
+
+    raw_content = response.choices[0].message.content    
+
+    return {"translation_result": raw_content}
