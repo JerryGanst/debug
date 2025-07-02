@@ -2,13 +2,13 @@ max_loop: 1
 
 models:
   default:
-    endpoint: "http://10.180.116.172:1145/v1"
+    endpoint: "http://10.180.116.5:6392/v1"
     key: "SOME_KEY"
     temperature: 0.7
     model_name: "qwen3"
     thinking: false
   qwen3-reasoning:
-    endpoint: "http://10.180.116.5:1145/v1"
+    endpoint: "http://10.180.116.5:6392/v1"
     key: "SOME_KEY"
     temperature: 0.7
     model_name: "qwen3-reasoning"
