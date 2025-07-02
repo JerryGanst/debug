@@ -143,6 +143,7 @@ async def process_summary(request: QueryRequest):
 
 @app.post("/translate")
 async def process_translation(request: TranslationRequest):
+    # Only SSE (Server-Sent Events) streaming response is supported for translation.
     SUPPORTED_LANGUAGES = ["中文", "英文", "越南语", "西班牙语"]
 
     if request.target_language not in SUPPORTED_LANGUAGES:
@@ -160,6 +161,7 @@ async def process_translation(request: TranslationRequest):
             }
         )
 
+    # Do NOT use await here; translate is an async generator for SSE
     return StreamingResponse(translate(request), media_type="text/event-stream")
 
 

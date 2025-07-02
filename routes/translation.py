@@ -87,7 +87,9 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
 
     # Retry logic
     max_retries = 3
-    for attempt in range(1, max_retries + 1):
+    attempt = 1
+    while attempt <= max_retries:
+        data_yielded = False
         try:
             client = OpenAI(api_key=api_key, base_url=api_base)
             models = client.models.list()
@@ -112,6 +114,7 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
                 if delta:
                     full_response += delta
                     yield translate_stream_response(delta)
+                    data_yielded = True
 
             # Validate response
             if not full_response.strip():
@@ -120,10 +123,16 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
             yield "data: [DONE]\n\n"
             return
         except Exception as e:
-            if attempt == max_retries:
+            if data_yielded:
+                # If we've already yielded data, do not retry, just finish the stream with error
+                yield translate_stream_response(f"[ERROR] Translation interrupted: {str(e)}")
+                yield "data: [DONE]\n\n"
+                return
+            elif attempt == max_retries:
                 yield translate_stream_response(f"[ERROR] Translation failed after {max_retries} attempts: {str(e)}")
                 yield "data: [DONE]\n\n"
                 return
             else:
                 await asyncio.sleep(1.5)  # Wait before retrying
+                attempt += 1
                 continue
