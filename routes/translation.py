@@ -9,14 +9,13 @@ from configs.load import load_config, ModelRouter
 from utils.glossary.glossary import glossary_extract
 
 class TranslationResponse(BaseModel):
-    translation_result: str  # 翻译结果
-    
-def translate_stream_response(content: str) -> str:
-    # 你可以定义一个简单的 Pydantic 模型用于统一数据格式
-    response_data = {"translation_result": content}
-    json_str = json.dumps(response_data, ensure_ascii=False)
-    return f"data: {json_str}\n\n"
+    end: bool = False
+    content: str  # 翻译结果
 
+def translate_stream_response(content: str, end: bool = False) -> str:
+    # 你可以定义一个简单的 Pydantic 模型用于统一数据格式
+    response_data = TranslationResponse(end=end, content=content).model_dump_json()
+    return f"data: {response_data}\n\n"
 
 class TranslationRequest(BaseModel):
     user_id: str
@@ -113,24 +112,23 @@ into **{target_language}** and output it as **valid, neatly formatted Markdown**
                 delta = chunk.choices[0].delta.content
                 if delta:
                     full_response += delta
-                    yield translate_stream_response(delta)
+                    yield translate_stream_response(delta, end=False)
                     data_yielded = True
-
             # Validate response
             if not full_response.strip():
-                yield translate_stream_response("[ERROR] Empty translation result.")
+                yield translate_stream_response("[ERROR] Empty translation result.", end=False)
             # 结束时发送特殊事件通知
-            yield "data: [DONE]\n\n"
+            yield translate_stream_response("", end=True)
             return
         except Exception as e:
             if data_yielded:
                 # If we've already yielded data, do not retry, just finish the stream with error
-                yield translate_stream_response(f"[ERROR] Translation interrupted: {str(e)}")
-                yield "data: [DONE]\n\n"
+                yield translate_stream_response(f"[ERROR] Translation interrupted: {str(e)}", end=False)
+                yield translate_stream_response("", end=True)
                 return
             elif attempt == max_retries:
-                yield translate_stream_response(f"[ERROR] Translation failed after {max_retries} attempts: {str(e)}")
-                yield "data: [DONE]\n\n"
+                yield translate_stream_response(f"[ERROR] Translation failed after {max_retries} attempts: {str(e)}", end=False)
+                yield translate_stream_response("", end=True)
                 return
             else:
                 await asyncio.sleep(1.5)  # Wait before retrying

@@ -2,25 +2,13 @@ max_loop: 1
 
 models:
   default:
-    endpoint: "http://10.180.116.2:6380/v1"
-    key: "SOME_KEY"
-    temperature: 0.7
-    model_name: "qwen-ns-32b"
-    thinking: false
-  qwen-qwq-reasoning:
-    endpoint: "http://10.180.116.2:6379/v1"
-    key: "SOME_KEY"
-    temperature: 0.7
-    model_name: "qwen-qwq-reasoning"
-    thinking: true
-  qwen3:
-    endpoint: "http://10.180.116.172:1145/v1"
+    endpoint: "http://10.180.116.5:6391/v1"
     key: "SOME_KEY"
     temperature: 0.7
     model_name: "qwen3"
     thinking: false
   qwen3-reasoning:
-    endpoint: "http://10.180.116.5:1145/v1"
+    endpoint: "http://10.180.116.5:6391/v1"
     key: "SOME_KEY"
     temperature: 0.7
     model_name: "qwen3-reasoning"
@@ -42,7 +30,7 @@ modules:
   summarization:
     default_model: "default"
   translation:
-    default_model: "qwen3"
+    default_model: "default"
   doc_metadata:
     default_model: "default"
   document_abstract:
