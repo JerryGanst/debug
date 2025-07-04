@@ -2,25 +2,26 @@ max_loop: 1
 
 models:
   default:
-    endpoint: "http://10.180.116.2:6380/v1"
+    endpoint: "http://10.180.116.5:6391/v1"
     key: "SOME_KEY"
     temperature: 0.7
-    model_name: "qwen-ns-32b"
+    model_name: "qwen3"
     thinking: false
-  qwen-qwq-reasoning:
-    endpoint: "http://10.180.116.2:6379/v1"
+  qwen3-reasoning:
+    endpoint: "http://10.180.116.5:6391/v1"
     key: "SOME_KEY"
     temperature: 0.7
-    model_name: "qwen-qwq-reasoning"
+    model_name: "qwen3-reasoning"
     thinking: true
+
 
 modules:
   question_classification:
     default_model: "default"
   commercial_api:
-    default_model: "qwen3"
+    default_model: "default"
   question_optimization:
-    enable: True
+    enable: true
     default_model: "default"
   answer_generation:
     default_model: "default"
@@ -42,14 +43,16 @@ modules:
     default_model: "default"
   personal_knowledge_base:
     default_model: "default"
+  prompt_filler:
+    default_model: "default"
 
 context_retrieval:
-  weaviate_endpoint: "http://127.0.0.1:8080" # 修改为HR知识库的weaviate服务的新端口8080
+  weaviate_endpoint: "http://10.180.116.2:8085" # 修改为it知识库的weaviate服务的新端口8085
   embedding_endpoint: "http://10.180.116.2:8000/embed/" # 单个向量生成接口
   embedding_batch_endpoint: "http://10.180.116.5:8000/embed_batch/"
 
 mongodb:
-  mongodb_connection_string: "127.0.0.1:27017" # 修改为HR知识库的mongodb服务的新端口27017
+  mongodb_connection_string: "10.180.116.2:27018" # 修改为it知识库的mongodb服务的新端口27018
 
 tokenizer_service:
   tokenizer_endpoint: "http://10.180.116.2:15000" # token计数接口

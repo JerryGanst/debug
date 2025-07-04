@@ -1,20 +1,10 @@
-# vLLM 0.9.1 · 4×H20 (96 GB) · Qwen3-32B-FP8 · 32768 tokens 原生长度
 host: "0.0.0.0"
-port: 6391
+port: 1002
 uvicorn-log-level: "info"
+served-model-name: "qwen3-32b-awq"
+gpu_memory_utilization: 0.95
 
-served-model-name: "Qwen3-32B"
-
-# —— 并行与精度 ——
-tensor-parallel-size: 4            # 每张 H20 分担 1/4 模型
+dtype: "dfloat16"
+kv-cache-dtype: "fp8"
+tensor-parallel-size: 4
 pipeline-parallel-size: 1
-# dtype: "auto"                      # 自动识别 FP8 模型权重
-# kv-cache-dtype: "fp8"              # 使用 FP8 KV Cache（E5M2）
-
-# # —— 显存与上下文配置 ——
-# gpu-memory-utilization: 0.92       # 每张卡使用上限为 92% 显存，稳定性优先
-# max_model_len: 32768               # 原生长度，无需 YaRN 外推
-
-# # —— 批处理控制 ——
-# max_num_seqs: 64                  # 并发序列数，适合中等 prompt 长度
-# max_num_batched_tokens: 120000     # 每批最大 token 总数（依照剩余显存估算）

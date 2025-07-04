@@ -1,114 +1,172 @@
-# 准备设置
-## 0. 前置
-### 0.1 模型位置
+# RAG平台部署指南
+
+## 1. 环境准备
+
+### 1.1 模型存储位置
 #### 测试环境 A100
+```
 /root/modelscope_models/
-#### 正式环境 H20
-[请填写正式环境H20的模型位置]
+```
 
-#### 环境 L20
+#### H20环境
+```
+/mnt/ai_data/models/huggingface_models/
+```
+
+#### L20环境
+```
 [请填写环境L20的模型位置]
+```
 
-
-### 0.2 模型启动 configs.yaml 文件夹
-#### 测试环境 A100
+### 1.2 配置文件位置
+#### A100环境
+```
 /opt/rag-projects/rag-it/luxshare-ai-rag/vllm/
-#### 正式环境 H20
-[请填写正式环境H20的configs.yaml文件夹路径]
-
-### 环境 L20
-[请填写环境L20的configs.yaml文件夹路径]
-
-## 1. 启动模型
-1.1 下载与解压语言模型
-以A100为例，首先从https://huggingface.co/上面下载模型，解压在/root/modelscope_models下。
-
-1.2 下载 RAG 平台源码并存放至指定位置
-前往公司gitlab, 复制下载链接后使用git clone 复制至指定位置 如在 A100 中 /opt/rag-projects/rag-it/luxshare-ai-rag
-
-1.3 创建虚拟环境
-
-1.3.1 导航至项目目录中
-
-```bash
-cd /opt/rag-projects/rag-it/luxshare-ai-rag
 ```
-1.3.2 创建虚拟环境  
-```bash
-python3.13 -m venv ./venv
-```                      # 将3.10替换为实际需要的python版本
-1.3.3 下载所需要用到的 python 包  
-```bash
-pip install -r "requirements.txt"
+
+#### H20环境
 ```
- 补全 vllm 所需包    # 注：建议在别的地方安装vllm所需的虚拟环境，
-```bash
-  - pip install uv    # Windows时 当心360误删uv，提前把项目文件夹加入白名单
-  - uv pip install vllm --torch-backend=auto
+/mnt/ai_data/models/
 ```
-1.4 启动 vllm 服务
-qwen3 A100
+
+#### L20环境
+```
+[请填写环境L20的配置文件路径]
+```
+
+## 2. 模型部署
+
+### 2.1 下载语言模型
+以H20环境为例，从 https://huggingface.co/ 下载模型，解压到 `/mnt/ai_data/models/huggingface_models/` 目录下。
+
+### 2.2 创建并激活虚拟环境
+以H20环境为例：
 ```bash
-CUDA_VISIBLE_DEVICES=0 vllm serve /root/modelscope_models/Qwen_Qwen3-32B-FP8 \
-  --config /opt/rag-projects/rag-it/luxshare-ai-rag/vllm/qwen3_32b_fp8_a100.yaml \
+cd /opt/venvs/vllm_for_models_venvs
+python3.10 -m venv ./aaaa             # 在当前目录下创建名为aaaa的虚拟环境
+source ./aaaa/bin/activate            # 激活该虚拟环境
+```
+
+### 2.3 安装依赖包
+#### 安装vllm
+```bash
+pip install --upgrade pip
+pip install uv
+uv pip install vllm --torch-backend=auto
+```
+
+#### 安装flash infer
+```bash
+pip install flashinfer-python==0.2.2
+```
+
+### 2.4 创建模型配置文件
+#### 2.4.1 创建配置文件
+```bash
+vim /mnt/ai_data/models/qwen3_32b_awq_32k_on_H20.yaml
+```
+
+#### 2.4.2 编辑配置参数
+按 `i` 进入编辑模式，右键粘贴以下内容：
+
+```yaml
+host: "0.0.0.0"
+port: 1002
+uvicorn-log-level: "info"
+served-model-name: "qwen3-32b-awq"
+gpu_memory_utilization: 0.95
+dtype: "bfloat16"
+kv-cache-dtype: "fp8"
+tensor-parallel-size: 4
+pipeline-parallel-size: 1
+```
+
+#### 2.4.3 保存并退出
+按 `ESC` 退出编辑模式，输入 `:wq` 保存并退出。
+
+### 2.5 启动vLLM服务
+以Qwen3 32B在H20*4环境为例：
+```bash
+export TORCH_CUDA_ARCH_LIST="9.0"
+
+CUDA_VISIBLE_DEVICES=4,5,6,7 \
+VLLM_ATTENTION_BACKEND=FLASHINFER \
+vllm serve /mnt/ai_data/models/huggingface_models/Qwen_Qwen3-32B-AWQ \
+  --config /mnt/ai_data/models/qwen3_32b_awq_32k_on_H20.yaml \
   --reasoning-parser qwen3 \
   --enable-auto-tool-choice \
   --tool-call-parser hermes
 ```
-qwen3 h20*4
+
+## 3. RAG平台部署
+
+### 3.1 下载RAG平台源码
+前往公司GitLab，复制下载链接后使用git clone命令复制至指定位置。
+例如在A100测试环境中：
 ```bash
-CUDA_VISIBLE_DEVICES=4,5,6,7 \
-vllm serve /mnt/ai_data/models/huggingface_models/Qwen_Qwen3-32B-FP8 \
-  --config /mnt/ai_data/models/qwen3_32b_32k_on_H20.yaml \
-  --reasoning-parser qwen3 \
-  --enable-auto-tool-choice \
-  --tool-call-parser hermes \
-#  --chat-template /mnt/ai_data/models/qwen3_nonthinking.jinja
+git clone [repository_url] /opt/rag-projects/rag-it/luxshare-ai-rag
 ```
 
-qwen3 h20*4
+### 3.2 导航至项目目录
 ```bash
-CUDA_VISIBLE_DEVICES=4,5,6,7 \
-vllm serve /mnt/ai_data/models/huggingface_models/Qwen_Qwen3-30B-A3B-FP8 \
-  --config /mnt/ai_data/models/qwen3_30b_a3b_32k_on_H20.yaml \
-  --reasoning-parser qwen3 \
-  --enable-auto-tool-choice \
-  --tool-call-parser hermes \
-  --enable-expert-parallel
+cd /opt/rag-projects/rag-it/luxshare-ai-rag
 ```
 
-1.5 至此，若显示
-INFO:     Started server process [581611]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-则模型正确启动
-
-## 2. 启动 RAG 平台
-2.1 激活虚拟环境
-若根据步骤1.3正确创建了虚拟环境，此时项目目录下应有 .venv 文件夹
-2.1.1 Linux
+### 3.3 创建Python虚拟环境
 ```bash
-source .venv/bin/activate
-```
-2.1.2 Windows
-```powershell
-.\venv\Scripts\Activate.ps1
+python3.13 -m venv ./venv
 ```
 
-2.2 配置 agent_configs
-导航至 configs 文件夹  
+### 3.4 激活虚拟环境
+```bash
+source ./venv/bin/activate
+```
+
+### 3.5 安装Python依赖包
+```bash
+pip install -r requirements.txt
+```
+
+### 3.6 配置agent_configs
+#### 3.6.1 导航至configs文件夹
 ```bash
 cd ./configs
 ```
-复制并根据需要更改配置文件 
-2.3 启动RAG服务
+
+#### 3.6.2 复制并修改配置文件
+```bash
+cp agent_configs_factory_it.yaml agent_configs.yaml
+```
+根据需要修改 `agent_configs.yaml` 文件中的配置参数。
+
+### 3.7 启动RAG服务
 在激活虚拟环境后，运行以下命令启动RAG平台：
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 9005
-``` 
+```
 
-2.4 验证服务启动
-如果看到类似以下输出，则表示服务启动成功：
-INFO:     Started server process [6976]
+## 4. 服务验证
+
+### 4.1 模型服务验证
+如果vLLM模型服务启动成功，您将看到类似以下输出：
+```
+INFO:     Started server process [****]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+```
+
+### 4.2 RAG平台服务验证
+如果RAG平台服务启动成功，您将看到类似以下输出：
+```
+INFO:     Started server process [****]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9005 (Press CTRL+C to quit)
+```
+
+## 5. 注意事项
+
+1. 确保所有路径根据实际环境进行调整
+2. 检查GPU显存是否足够支持模型运行
+3. 确保网络连接正常，能够访问HuggingFace等外部资源
+4. 定期检查日志文件以监控服务运行状态
