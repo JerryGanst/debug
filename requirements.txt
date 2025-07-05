@@ -25,3 +25,5 @@ langchain-text-splitters~=0.3.8
 minio~=7.2.15
 langchain-openai~=0.3.25
 chromadb~=0.6.3
+redis~=5.0.1
+sentry-sdk~=1.40.0
