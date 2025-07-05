@@ -35,6 +35,7 @@ from mongodb.ops.object_op import get_objects_by_conditions
 from domains.context import DomainContext
 from .error_reporting import ErrorReporter, ErrorMiddleware
 from .performance import perf_monitor, timed_operation
+from .glossary_manager import add_glossary_routes
 
 # Configure structured logging
 logging.basicConfig(
@@ -153,6 +154,9 @@ class BaseService:
         
         # Include personal RAG router
         app.include_router(personal_rag, prefix="/personal")
+        
+        # Add glossary management routes
+        add_glossary_routes(app, self.domain_name)
         
         # Health check endpoint
         @app.get("/health")

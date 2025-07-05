@@ -15,15 +15,14 @@ services:
     networks:
       - app_network
 
-  hr_service:
+  embedding_service:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8001:8001"
+      - "8100:8100"
     environment:
-      - DOMAIN_NAME=HR
-      - HR_SERVICE_PORT=8001
+      - EMBEDDING_SERVICE_PORT=8100
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SENTRY_DSN=${SENTRY_DSN}
@@ -33,21 +32,22 @@ services:
         condition: service_healthy
     volumes:
       - ./:/app
-      - ./logs/hr:/app/logs
-    command: python start_hr_service.py
+      - ./logs/embedding:/app/logs
+    command: python embedding_service_api/main.py
     networks:
       - app_network
     restart: unless-stopped
 
-  it_service:
+  # Example domain services - add more as needed
+  domain_service_1:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8002:8002"
+      - "${DOMAIN_1_PORT:-8001}:${DOMAIN_1_PORT:-8001}"
     environment:
-      - DOMAIN_NAME=IT
-      - IT_SERVICE_PORT=8002
+      - DOMAIN_NAME=${DOMAIN_1_NAME:-hr}
+      - SERVICE_PORT=${DOMAIN_1_PORT:-8001}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SENTRY_DSN=${SENTRY_DSN}
@@ -55,13 +55,43 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      embedding_service:
+        condition: service_started
     volumes:
       - ./:/app
-      - ./logs/it:/app/logs
-    command: python start_it_service.py
+      - ./logs/${DOMAIN_1_NAME:-hr}:/app/logs
+    command: python start_domain_service.py ${DOMAIN_1_NAME:-hr} --port ${DOMAIN_1_PORT:-8001}
     networks:
       - app_network
     restart: unless-stopped
+
+  domain_service_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${DOMAIN_2_PORT:-8002}:${DOMAIN_2_PORT:-8002}"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_2_NAME:-it}
+      - SERVICE_PORT=${DOMAIN_2_PORT:-8002}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SENTRY_DSN=${SENTRY_DSN}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    depends_on:
+      redis:
+        condition: service_healthy
+      embedding_service:
+        condition: service_started
+    volumes:
+      - ./:/app
+      - ./logs/${DOMAIN_2_NAME:-it}:/app/logs
+    command: python start_domain_service.py ${DOMAIN_2_NAME:-it} --port ${DOMAIN_2_PORT:-8002}
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # Add more domain services as needed by copying the pattern above
 
 volumes:
   redis_data:

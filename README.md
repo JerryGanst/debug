@@ -1,172 +1,442 @@
-# RAG平台部署指南
+# Domain-Based Microservices Architecture
 
-## 1. 环境准备
+A flexible, scalable architecture for running domain-specific services with built-in RAG (Retrieval-Augmented Generation) capabilities, custom glossary management, and separated embedding services.
 
-### 1.1 模型存储位置
-#### 测试环境 A100
-```
-/root/modelscope_models/
-```
+## 🏗️ Architecture Overview
 
-#### H20环境
-```
-/mnt/ai_data/models/huggingface_models/
-```
+This system provides a modular approach to deploying domain-specific services. Instead of being limited to specific domains like HR or IT, you can easily create and deploy services for any domain (Finance, Legal, Sales, Marketing, etc.).
 
-#### L20环境
-```
-[请填写环境L20的模型位置]
-```
+### Key Components
 
-### 1.2 配置文件位置
-#### A100环境
-```
-/opt/rag-projects/rag-it/luxshare-ai-rag/vllm/
-```
+1. **Domain Services**: Each domain runs as a separate FastAPI service on its own port
+2. **Embedding Service**: Standalone service for text embeddings (port 8100)
+3. **Redis Cache**: Optional caching layer for performance
+4. **Custom Glossary**: Each domain can have its own glossary of terms
+5. **Error Reporting**: Integrated Sentry support for production monitoring
 
-#### H20环境
-```
-/mnt/ai_data/models/
-```
+## 🚀 Quick Start
 
-#### L20环境
-```
-[请填写环境L20的配置文件路径]
-```
+### 1. Basic Setup
 
-## 2. 模型部署
-
-### 2.1 下载语言模型
-以H20环境为例，从 https://huggingface.co/ 下载模型，解压到 `/mnt/ai_data/models/huggingface_models/` 目录下。
-
-### 2.2 创建并激活虚拟环境
-以H20环境为例：
 ```bash
-cd /opt/venvs/vllm_for_models_venvs
-python3.10 -m venv ./aaaa             # 在当前目录下创建名为aaaa的虚拟环境
-source ./aaaa/bin/activate            # 激活该虚拟环境
-```
+# Clone the repository
+git clone <your-repo-url>
+cd <project-directory>
 
-### 2.3 安装依赖包
-#### 安装vllm
-```bash
-pip install --upgrade pip
-pip install uv
-uv pip install vllm --torch-backend=auto
-```
-
-#### 安装flash infer
-```bash
-pip install flashinfer-python==0.2.2
-```
-
-### 2.4 创建模型配置文件
-#### 2.4.1 创建配置文件
-```bash
-vim /mnt/ai_data/models/qwen3_32b_awq_32k_on_H20.yaml
-```
-
-#### 2.4.2 编辑配置参数
-按 `i` 进入编辑模式，右键粘贴以下内容：
-
-```yaml
-host: "0.0.0.0"
-port: 1002
-uvicorn-log-level: "info"
-served-model-name: "qwen3-32b-awq"
-gpu_memory_utilization: 0.95
-dtype: "bfloat16"
-kv-cache-dtype: "fp8"
-tensor-parallel-size: 4
-pipeline-parallel-size: 1
-```
-
-#### 2.4.3 保存并退出
-按 `ESC` 退出编辑模式，输入 `:wq` 保存并退出。
-
-### 2.5 启动vLLM服务
-以Qwen3 32B在H20*4环境为例：
-```bash
-export TORCH_CUDA_ARCH_LIST="9.0"
-
-CUDA_VISIBLE_DEVICES=4,5,6,7 \
-VLLM_ATTENTION_BACKEND=FLASHINFER \
-vllm serve /mnt/ai_data/models/huggingface_models/Qwen_Qwen3-32B-AWQ \
-  --config /mnt/ai_data/models/qwen3_32b_awq_32k_on_H20.yaml \
-  --reasoning-parser qwen3 \
-  --enable-auto-tool-choice \
-  --tool-call-parser hermes
-```
-
-## 3. RAG平台部署
-
-### 3.1 下载RAG平台源码
-前往公司GitLab，复制下载链接后使用git clone命令复制至指定位置。
-例如在A100测试环境中：
-```bash
-git clone [repository_url] /opt/rag-projects/rag-it/luxshare-ai-rag
-```
-
-### 3.2 导航至项目目录
-```bash
-cd /opt/rag-projects/rag-it/luxshare-ai-rag
-```
-
-### 3.3 创建Python虚拟环境
-```bash
-python3.13 -m venv ./venv
-```
-
-### 3.4 激活虚拟环境
-```bash
-source ./venv/bin/activate
-```
-
-### 3.5 安装Python依赖包
-```bash
+# Install dependencies
 pip install -r requirements.txt
+
+# Copy environment configuration
+cp .env.example .env
 ```
 
-### 3.6 配置agent_configs
-#### 3.6.1 导航至configs文件夹
+### 2. Start a Domain Service
+
 ```bash
-cd ./configs
+# Start any domain service
+python start_domain_service.py <domain_name> --port <port>
+
+# Examples:
+python start_domain_service.py hr --port 8001
+python start_domain_service.py finance --port 8003
+python start_domain_service.py legal --port 8004
+
+# List available domains
+python start_domain_service.py --list-domains
 ```
 
-#### 3.6.2 复制并修改配置文件
+### 3. Start Embedding Service
+
 ```bash
-cp agent_configs_factory_it.yaml agent_configs.yaml
+# Run the standalone embedding service
+python embedding_service_api/main.py
+# Runs on port 8100 by default
 ```
-根据需要修改 `agent_configs.yaml` 文件中的配置参数。
 
-### 3.7 启动RAG服务
-在激活虚拟环境后，运行以下命令启动RAG平台：
+### 4. Docker Deployment
+
 ```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 9005
+# Start all services with Docker Compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-## 4. 服务验证
+## 📁 Project Structure
 
-### 4.1 模型服务验证
-如果vLLM模型服务启动成功，您将看到类似以下输出：
 ```
-INFO:     Started server process [****]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+.
+├── domains/                    # Domain configurations
+│   ├── hr/                    # HR domain
+│   │   ├── config.py         # Domain configuration
+│   │   └── templates/        # Domain-specific templates
+│   ├── it/                   # IT domain
+│   └── <your_domain>/        # Add new domains here
+├── services/
+│   ├── common/               # Shared service components
+│   │   ├── base_service.py   # Base service class
+│   │   ├── domain_factory.py # Dynamic domain service creation
+│   │   ├── glossary_manager.py # Glossary management
+│   │   ├── error_reporting.py # Error tracking
+│   │   └── performance.py    # Performance optimization
+│   ├── hr/                   # HR-specific service (optional)
+│   └── it/                   # IT-specific service (optional)
+├── embedding_service_api/     # Standalone embedding service
+│   └── main.py
+├── glossaries/               # Domain glossaries (auto-created)
+├── routes/                   # API route handlers
+├── models/                   # Data models
+├── start_domain_service.py   # Generic domain starter
+├── docker-compose.yml        # Docker configuration
+└── requirements.txt          # Python dependencies
 ```
 
-### 4.2 RAG平台服务验证
-如果RAG平台服务启动成功，您将看到类似以下输出：
-```
-INFO:     Started server process [****]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:9005 (Press CTRL+C to quit)
+## 🔧 Adding a New Domain
+
+### Method 1: Simple Configuration (Recommended)
+
+1. Create a new domain directory:
+```bash
+mkdir -p domains/finance
 ```
 
-## 5. 注意事项
+2. Create `domains/finance/config.py`:
+```python
+from domains.base import BaseDomainConfig
 
-1. 确保所有路径根据实际环境进行调整
-2. 检查GPU显存是否足够支持模型运行
-3. 确保网络连接正常，能够访问HuggingFace等外部资源
-4. 定期检查日志文件以监控服务运行状态
+class DomainConfig(BaseDomainConfig):
+    def __init__(self):
+        super().__init__()
+        self.DOMAIN_NAME = "FINANCE"
+        self.DOMAIN_DOC_TYPE = "Finance"
+        self.custom_config = {
+            "topics": "budgeting, accounting, financial planning, investments",
+            "systems": "QuickBooks, SAP Finance, Excel"
+        }
+    
+    def get_question_categories(self):
+        return {
+            1: "Financial calculations and procedures",
+            2: "Financial policies and regulations",
+            3: "General finance questions"
+        }
+```
+
+3. Start the service:
+```bash
+python start_domain_service.py finance --port 8003
+```
+
+### Method 2: Custom Service Implementation
+
+For domains requiring special functionality, create a custom service:
+
+1. Create `services/finance/finance_service.py`:
+```python
+from services.common.base_service import BaseService
+
+class FINANCEService(BaseService):
+    def __init__(self, port: int = 8003, host: str = "0.0.0.0"):
+        super().__init__(domain_name="FINANCE", port=port, host=host)
+    
+    def _add_routes(self):
+        super()._add_routes()
+        
+        # Add finance-specific routes
+        @self.app.get("/finance/reports")
+        async def generate_reports():
+            # Custom implementation
+            pass
+```
+
+## 📚 API Documentation
+
+### Common Endpoints (Available on all domain services)
+
+#### Core Functionality
+- `GET /health` - Service health check
+- `GET /domain-info` - Domain configuration info
+- `POST /chat` - Chat with AI assistant
+- `POST /query` - Process queries with RAG
+- `POST /summarize` - Summarize documents
+- `POST /translate` - Translate text
+- `POST /similarity` - Calculate text similarity
+
+#### Glossary Management
+- `POST /glossary/terms` - Add new term
+- `GET /glossary/terms/{term}` - Get specific term
+- `PUT /glossary/terms/{term}` - Update term
+- `DELETE /glossary/terms/{term}` - Delete term
+- `GET /glossary/search?query=...` - Search terms
+- `GET /glossary/terms` - List all terms (paginated)
+- `GET /glossary/categories` - List categories
+- `GET /glossary/export?format=json|csv|markdown` - Export glossary
+- `POST /glossary/import` - Import glossary
+- `GET /glossary/stats` - Glossary statistics
+
+#### Monitoring
+- `GET /metrics` - Performance metrics
+- `GET /test_error` - Test error handling
+
+### Embedding Service Endpoints (Port 8100)
+
+- `GET /health` - Service health check
+- `POST /embeddings` - Generate embeddings
+- `POST /embeddings/batch` - Batch embedding generation
+- `POST /similarity` - Calculate similarity
+- `GET /models` - List available models
+- `GET /cache/stats` - Cache statistics
+- `POST /cache/clear` - Clear cache
+
+## 🔐 Custom Glossary Usage
+
+Each domain can maintain its own glossary of terms and definitions:
+
+### Adding Terms via API
+
+```bash
+# Add a term
+curl -X POST http://localhost:8001/glossary/terms \
+  -H "Content-Type: application/json" \
+  -d '{
+    "term": "PTO",
+    "definition": "Paid Time Off - Employee benefit for vacation days",
+    "category": "benefits",
+    "aliases": ["vacation", "time off"],
+    "examples": ["Employees get 15 days of PTO per year"]
+  }'
+
+# Search terms
+curl "http://localhost:8001/glossary/search?query=time&limit=10"
+
+# Export glossary
+curl "http://localhost:8001/glossary/export?format=markdown" -o hr_glossary.md
+```
+
+### Glossary File Structure
+
+Glossaries are stored in JSON format at `glossaries/{domain}_glossary.json`:
+
+```json
+{
+  "pto": {
+    "term": "PTO",
+    "definition": "Paid Time Off...",
+    "category": "benefits",
+    "aliases": ["vacation"],
+    "examples": ["..."],
+    "related_terms": ["sick leave"],
+    "created_at": "2024-01-01T00:00:00",
+    "updated_at": "2024-01-01T00:00:00",
+    "version": 1
+  }
+}
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+# Domain configuration
+DOMAIN_NAME=IT  # Default domain for main.py
+
+# Service ports
+EMBEDDING_SERVICE_PORT=8100
+
+# Redis (optional)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Sentry error tracking (optional)
+SENTRY_DSN=https://your-sentry-dsn
+
+# Environment
+ENVIRONMENT=development
+
+# MongoDB configuration
+# Add your MongoDB settings here
+```
+
+### Performance Tuning
+
+Edit `services/common/performance.py`:
+
+```python
+OPTIMIZATION_CONFIG = {
+    'enable_caching': True,
+    'cache_ttl': 300,  # 5 minutes
+    'max_cache_size': 1000,
+    'connection_pool_size': 20,
+    'batch_size': 50,
+    'rate_limit_calls': 100,
+    'rate_limit_window': 60  # 1 minute
+}
+```
+
+## 🐳 Docker Deployment
+
+### Build and Run
+
+```bash
+# Build images
+docker-compose build
+
+# Start services
+docker-compose up -d
+
+# Scale services
+docker-compose up -d --scale hr_service=2
+
+# View logs
+docker-compose logs -f hr_service
+```
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` includes:
+- Redis for caching
+- Domain services (HR, IT by default)
+- Health checks
+- Automatic restarts
+- Volume mounts for logs
+
+## 📊 Monitoring and Debugging
+
+### Performance Metrics
+
+Access performance metrics at `http://localhost:{port}/metrics`:
+
+```json
+{
+  "service": "HR",
+  "metrics": {
+    "chat_request": {
+      "count": 150,
+      "avg_time": 0.234,
+      "min_time": 0.100,
+      "max_time": 1.234
+    }
+  }
+}
+```
+
+### Error Tracking
+
+1. **Local Development**: Check log files in `logs/` directory
+2. **Production**: Configure Sentry DSN for automatic error tracking
+
+### Health Checks
+
+```bash
+# Check service health
+curl http://localhost:8001/health
+
+# Response
+{
+  "status": "healthy",
+  "service": "HR",
+  "timestamp": "2024-01-01T00:00:00",
+  "redis_available": true
+}
+```
+
+## 🔌 Integration Examples
+
+### Python Client
+
+```python
+import requests
+
+# Create embedding
+response = requests.post("http://localhost:8100/embeddings", json={
+    "text": "Hello world",
+    "model": "text-embedding-ada-002"
+})
+embedding = response.json()["embeddings"]
+
+# Query domain service
+response = requests.post("http://localhost:8001/chat", json={
+    "messages": [{"role": "user", "content": "What is PTO?"}],
+    "stream": False
+})
+answer = response.json()
+```
+
+### JavaScript/TypeScript Client
+
+```javascript
+// Query with streaming
+const response = await fetch('http://localhost:8001/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    messages: [{ role: 'user', content: 'Explain the leave policy' }],
+    stream: true
+  })
+});
+
+const reader = response.body.getReader();
+// Process streaming response...
+```
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+1. **Port Already in Use**
+   ```bash
+   # Find process using port
+   lsof -i :8001
+   # Or change port in start command
+   python start_domain_service.py hr --port 8010
+   ```
+
+2. **Import Errors**
+   ```bash
+   # Ensure all dependencies are installed
+   pip install -r requirements.txt
+   ```
+
+3. **Redis Connection Failed**
+   - Service will run without caching
+   - Install and start Redis: `redis-server`
+
+4. **Domain Not Found**
+   - Check if domain directory exists in `domains/`
+   - Ensure `config.py` is properly formatted
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add your domain or feature
+4. Submit a pull request
+
+### Adding a Domain Template
+
+To contribute a new domain template:
+
+1. Create domain configuration in `domains/<domain_name>/`
+2. Add example templates
+3. Document domain-specific features
+4. Add to the domain examples in this README
+
+## 📄 License
+
+[Your License Here]
+
+## 🙏 Acknowledgments
+
+Built with:
+- FastAPI for high-performance APIs
+- LangChain for RAG capabilities
+- OpenAI for embeddings and chat
+- Redis for caching
+- Sentry for error tracking
