@@ -6,7 +6,7 @@ import logging
 from typing import Optional, Dict, Any
 from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
-from ..utils.formatting import format_range
+from ..utils.formatting import format_range as format_range_util
 from ..utils.validation import validate_range_in_sheet_operation
 from ..utils.cell_validation import get_all_validation_ranges
 from ..utils.exceptions import FormattingError, ValidationError
@@ -76,7 +76,7 @@ def register_format_tools(mcp_server):
                 else:
                     start_cell, end_cell = range_address, None
                 
-                format_range(
+                format_range_util(
                     filepath=str(file_path),
                     sheet_name=sheet_name,
                     start_cell=start_cell,

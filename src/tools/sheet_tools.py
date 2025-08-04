@@ -120,7 +120,7 @@ def register_sheet_tools(mcp_server):
             scopes=["user_scoped"]
         )
     )
-    def merge_cells(user_id: str, filename: str, sheet_name: str, range_address: str) -> str:
+    def merge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str:
         """
         Merge a range of cells in the worksheet.
         
@@ -138,8 +138,8 @@ def register_sheet_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                merge_range(str(file_path), sheet_name, range_address)
-                return f"Cells {range_address} merged in sheet '{sheet_name}' of '{safe_filename}'"
+                result = merge_range(str(file_path), sheet_name, start_cell, end_cell)
+                return result["message"]
                 
         except Exception as e:
             logger.error(f"Error merging cells: {e}")
@@ -153,7 +153,7 @@ def register_sheet_tools(mcp_server):
             scopes=["user_scoped"]
         )
     )
-    def unmerge_cells(user_id: str, filename: str, sheet_name: str, range_address: str) -> str:
+    def unmerge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str:
         """
         Unmerge a range of cells in the worksheet.
         
@@ -171,8 +171,8 @@ def register_sheet_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                unmerge_range(str(file_path), sheet_name, range_address)
-                return f"Cells {range_address} unmerged in sheet '{sheet_name}' of '{safe_filename}'"
+                result = unmerge_range(str(file_path), sheet_name, start_cell, end_cell)
+                return result["message"]
                 
         except Exception as e:
             logger.error(f"Error unmerging cells: {e}")

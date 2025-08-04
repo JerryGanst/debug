@@ -214,7 +214,8 @@ rename_worksheet(user_id: str, filename: str, old_name: str, new_name: str) -> s
 Merge a range of cells in the worksheet.
 
 ```python
-merge_cells(user_id: str, filename: str, sheet_name: str, range_address: str) -> str
+merge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str
+
 ```
 
 - `range_address`: Range to merge (e.g., 'A1:C3')
@@ -228,7 +229,7 @@ merge_cells(user_id: str, filename: str, sheet_name: str, range_address: str) ->
 Unmerge a range of cells in the worksheet.
 
 ```python
-unmerge_cells(user_id: str, filename: str, sheet_name: str, range_address: str) -> str
+unmerge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str
 ```
 
 ---

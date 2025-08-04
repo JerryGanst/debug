@@ -63,10 +63,10 @@ def register_advanced_tools(mcp_server):
                     sheet_name=sheet_name,
                     chart_type=chart_type,
                     data_range=data_range,
-                    chart_title=chart_title,
-                    x_axis_title=x_axis_title,
-                    y_axis_title=y_axis_title,
-                    position=position
+                    title=chart_title,
+                    x_axis=x_axis_title,
+                    y_axis=y_axis_title,
+                    target_cell=position
                 )
                 
                 chart_desc = f"{chart_type} chart"
