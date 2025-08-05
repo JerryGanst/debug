@@ -2,12 +2,10 @@
 File management utilities with concurrent access protection.
 """
 
-import os
-import fcntl
-import time
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 from contextlib import contextmanager
+import filelock
 from .config import ServerConfig
 
 
@@ -65,36 +63,15 @@ class FileManager:
             
         Raises:
             TimeoutError: If lock cannot be acquired within timeout
-            FileNotFoundError: If file doesn't exist
         """
-        file_path = Path(file_path)
-        lock_path = file_path.with_suffix(file_path.suffix + '.lock')
-        
-        # Create lock file
-        lock_fd = None
-        start_time = time.time()
-        
+        lock_path = Path(str(file_path) + '.lock')
+        lock = filelock.FileLock(lock_path, timeout=timeout)
+
         try:
-            while True:
-                try:
-                    lock_fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_RDWR)
-                    fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    break
-                except (OSError, IOError):
-                    if time.time() - start_time > timeout:
-                        raise TimeoutError(f"Could not acquire lock for {file_path} within {timeout} seconds")
-                    time.sleep(0.1)
-            
+            lock.acquire()
             yield file_path
-            
         finally:
-            if lock_fd is not None:
-                try:
-                    fcntl.flock(lock_fd, fcntl.LOCK_UN)
-                    os.close(lock_fd)
-                    os.unlink(str(lock_path))
-                except (OSError, IOError):
-                    pass  # Lock file cleanup failed, but operation completed
+            lock.release()
 
 
 def get_safe_filename(filename: str) -> str:

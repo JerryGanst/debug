@@ -91,7 +91,7 @@ def register_advanced_tools(mcp_server):
         rows: List[str],
         values: List[str],
         columns: Optional[List[str]] = None,
-        agg_func: str = "mean"
+        agg_func: str = "sum"
     ) -> str:
         """
         Create a pivot table from data range.

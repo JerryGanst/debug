@@ -13,6 +13,9 @@ minio>=7.1.0
 # Configuration file parsing
 PyYAML>=6.0
 
+# Cross-platform file locking
+filelock>=3.9.0
+
 # Optional: Development and testing dependencies (uncomment if needed)
 # pytest>=7.0.0
 # pytest-asyncio>=0.21.0
