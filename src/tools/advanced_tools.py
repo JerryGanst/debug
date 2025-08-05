@@ -9,7 +9,7 @@ from ..core.file_manager import get_safe_filename
 from ..utils.chart import create_chart_in_sheet as create_chart_impl
 from ..utils.pivot import create_pivot_table as create_pivot_table_impl
 from ..utils.tables import create_excel_table as create_table_impl
-from ..utils.exceptions import ChartError, PivotError, DataError
+from ..utils.exceptions import ChartError, PivotError, DataError, ValidationError
 
 logger = logging.getLogger("excel-mcp")
 
