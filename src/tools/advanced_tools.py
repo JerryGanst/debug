@@ -68,13 +68,9 @@ def register_advanced_tools(mcp_server):
                     x_axis=x_axis,
                     y_axis=y_axis
                 )
-                
-                chart_desc = f"{chart_type} chart"
-                if chart_title:
-                    chart_desc = f"'{chart_title}' {chart_type} chart"
-                
-                return f"{chart_desc} created successfully in sheet '{sheet_name}' of '{safe_filename}'"
-                
+                return result['message']
+        except (ValidationError, ChartError) as e:
+            return f"Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error creating chart: {e}")
             raise ChartError(f"Failed to create chart: {str(e)}")

@@ -283,7 +283,7 @@ def register_sheet_tools(mcp_server):
             
             with mcp_server.file_manager.lock_file(file_path):
                 from ..utils.sheet import insert_cols
-                result = insert_cols(full_path, sheet_name, start_col, count)
+                result = insert_cols(str(file_path), sheet_name, start_col, count)
                 return result["message"]
         except (ValidationError, SheetError) as e:
             return f"Error: {str(e)}"
