@@ -1,3 +1,6 @@
+# Python version requirement
+# Requires Python 3.9+
+
 # Core MCP framework (using FastMCP 2.0)
 fastmcp>=2.0.0,<3.0.0
 

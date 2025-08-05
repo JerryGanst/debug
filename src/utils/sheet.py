@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from copy import copy
 
 from openpyxl import load_workbook
@@ -243,7 +243,7 @@ def unmerge_range(filepath: str, sheet_name: str, start_cell: str, end_cell: str
         logger.error(f"Failed to unmerge range: {e}")
         raise SheetError(str(e))
 
-def get_merged_ranges(filepath: str, sheet_name: str) -> list[str]:
+def get_merged_ranges(filepath: str, sheet_name: str) -> List[str]:
     """Get merged cells in a worksheet."""
     try:
         wb = load_workbook(filepath)
@@ -363,4 +363,116 @@ def delete_range_operation(
         raise
     except Exception as e:
         logger.error(f"Failed to delete range: {e}")
+        raise SheetError(str(e))
+
+
+def insert_row(filepath: str, sheet_name: str, start_row: int, count: int = 1) -> Dict[str, Any]:
+    """Insert one or more rows starting at the specified row."""
+    try:
+        wb = load_workbook(filepath)
+        if sheet_name not in wb.sheetnames:
+            raise SheetError(f"Sheet '{sheet_name}' not found")
+            
+        worksheet = wb[sheet_name]
+        
+        # Validate parameters
+        if start_row < 1:
+            raise ValidationError("Start row must be 1 or greater")
+        if count < 1:
+            raise ValidationError("Count must be 1 or greater")
+            
+        worksheet.insert_rows(start_row, count)
+        wb.save(filepath)
+        
+        return {"message": f"Inserted {count} row(s) starting at row {start_row} in sheet '{sheet_name}'"}
+    except (ValidationError, SheetError) as e:
+        logger.error(str(e))
+        raise
+    except Exception as e:
+        logger.error(f"Failed to insert rows: {e}")
+        raise SheetError(str(e))
+
+
+def insert_cols(filepath: str, sheet_name: str, start_col: int, count: int = 1) -> Dict[str, Any]:
+    """Insert one or more columns starting at the specified column."""
+    try:
+        wb = load_workbook(filepath)
+        if sheet_name not in wb.sheetnames:
+            raise SheetError(f"Sheet '{sheet_name}' not found")
+            
+        worksheet = wb[sheet_name]
+        
+        # Validate parameters
+        if start_col < 1:
+            raise ValidationError("Start column must be 1 or greater")
+        if count < 1:
+            raise ValidationError("Count must be 1 or greater")
+            
+        worksheet.insert_cols(start_col, count)
+        wb.save(filepath)
+        
+        return {"message": f"Inserted {count} column(s) starting at column {start_col} in sheet '{sheet_name}'"}
+    except (ValidationError, SheetError) as e:
+        logger.error(str(e))
+        raise
+    except Exception as e:
+        logger.error(f"Failed to insert columns: {e}")
+        raise SheetError(str(e))
+
+
+def delete_rows(filepath: str, sheet_name: str, start_row: int, count: int = 1) -> Dict[str, Any]:
+    """Delete one or more rows starting at the specified row."""
+    try:
+        wb = load_workbook(filepath)
+        if sheet_name not in wb.sheetnames:
+            raise SheetError(f"Sheet '{sheet_name}' not found")
+            
+        worksheet = wb[sheet_name]
+        
+        # Validate parameters
+        if start_row < 1:
+            raise ValidationError("Start row must be 1 or greater")
+        if count < 1:
+            raise ValidationError("Count must be 1 or greater")
+        if start_row > worksheet.max_row:
+            raise ValidationError(f"Start row {start_row} exceeds worksheet bounds (max row: {worksheet.max_row})")
+            
+        worksheet.delete_rows(start_row, count)
+        wb.save(filepath)
+        
+        return {"message": f"Deleted {count} row(s) starting at row {start_row} in sheet '{sheet_name}'"}
+    except (ValidationError, SheetError) as e:
+        logger.error(str(e))
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete rows: {e}")
+        raise SheetError(str(e))
+
+
+def delete_cols(filepath: str, sheet_name: str, start_col: int, count: int = 1) -> Dict[str, Any]:
+    """Delete one or more columns starting at the specified column."""
+    try:
+        wb = load_workbook(filepath)
+        if sheet_name not in wb.sheetnames:
+            raise SheetError(f"Sheet '{sheet_name}' not found")
+            
+        worksheet = wb[sheet_name]
+        
+        # Validate parameters
+        if start_col < 1:
+            raise ValidationError("Start column must be 1 or greater")
+        if count < 1:
+            raise ValidationError("Count must be 1 or greater")
+        if start_col > worksheet.max_column:
+            raise ValidationError(f"Start column {start_col} exceeds worksheet bounds (max column: {worksheet.max_column})")
+            
+        worksheet.delete_cols(start_col, count)
+        wb.save(filepath)
+        
+        return {"message": f"Deleted {count} column(s) starting at column {start_col} in sheet '{sheet_name}'"}
+    except (ValidationError, SheetError) as e:
+        logger.error(str(e))
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete columns: {e}")
         raise SheetError(str(e))

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List, Dict, Optional
 import uuid
 import logging
 
@@ -17,11 +17,11 @@ def create_pivot_table(
     filepath: str,
     sheet_name: str,
     data_range: str,
-    rows: list[str],
-    values: list[str],
-    columns: list[str] | None = None,
+    rows: List[str],
+    values: List[str],
+    columns: Optional[List[str]] = None,
     agg_func: str = "sum"
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Create pivot table in sheet using Excel table functionality
     
     Args:
@@ -218,7 +218,7 @@ def create_pivot_table(
         raise PivotError(str(e))
 
 
-def _get_combinations(field_values: dict[str, set]) -> list[dict]:
+def _get_combinations(field_values: Dict[str, set]) -> List[Dict]:
     """Get all combinations of field values."""
     result = [{}]
     for field, values in list(field_values.items()):  # Convert to list to avoid runtime changes
@@ -232,7 +232,7 @@ def _get_combinations(field_values: dict[str, set]) -> list[dict]:
     return result
 
 
-def _filter_data(data: list[dict], row_filters: dict, col_filters: dict) -> list[dict]:
+def _filter_data(data: List[Dict], row_filters: Dict, col_filters: Dict) -> List[Dict]:
     """Filter data based on row and column filters."""
     result = []
     for record in data:
@@ -250,7 +250,7 @@ def _filter_data(data: list[dict], row_filters: dict, col_filters: dict) -> list
     return result
 
 
-def _aggregate_values(data: list[dict], field: str, agg_func: str) -> float:
+def _aggregate_values(data: List[Dict], field: str, agg_func: str) -> float:
     """Aggregate values using the specified function."""
     values = [record[field] for record in data if field in record and isinstance(record[field], (int, float))]
     if not values:

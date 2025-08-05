@@ -65,7 +65,7 @@ def create_chart_in_sheet(
     x_axis: str = "",
     y_axis: str = "",
     style: Optional[Dict] = None
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Create chart in sheet with enhanced styling options"""
     # Ensure style dict exists and defaults to showing data labels
     if style is None:

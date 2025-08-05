@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 import logging
 
 from .workbook import get_or_create_workbook
@@ -13,7 +13,7 @@ def apply_formula(
     sheet_name: str,
     cell: str,
     formula: str
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Apply any Excel formula to a cell."""
     try:
         if not validate_cell_reference(cell):

@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any
+from typing import Any, Dict, Optional
 
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
@@ -16,7 +16,7 @@ def validate_formula_in_cell_operation(
     sheet_name: str,
     cell: str,
     formula: str
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Validate Excel formula before writing"""
     try:
         wb = load_workbook(filepath)
@@ -98,8 +98,8 @@ def validate_range_in_sheet_operation(
     filepath: str,
     sheet_name: str,
     start_cell: str,
-    end_cell: str | None = None,
-) -> dict[str, Any]:
+    end_cell: Optional[str] = None,
+) -> Dict[str, Any]:
     """Validate if a range exists in a worksheet and return data range info."""
     try:
         wb = load_workbook(filepath)

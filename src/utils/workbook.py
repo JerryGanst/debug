@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
@@ -9,7 +9,7 @@ from .exceptions import WorkbookError
 
 logger = logging.getLogger(__name__)
 
-def create_workbook(filepath: str, sheet_name: str = "Sheet1") -> dict[str, Any]:
+def create_workbook(filepath: str, sheet_name: str = "Sheet1") -> Dict[str, Any]:
     """Create a new Excel workbook with optional custom sheet name"""
     try:
         wb = Workbook()
@@ -60,7 +60,7 @@ def create_sheet(filepath: str, sheet_name: str) -> dict:
         logger.error(f"Failed to create sheet: {e}")
         raise WorkbookError(str(e))
 
-def get_workbook_info(filepath: str, include_ranges: bool = False) -> dict[str, Any]:
+def get_workbook_info(filepath: str, include_ranges: bool = False) -> Dict[str, Any]:
     """Get metadata about workbook including sheets, ranges, etc."""
     try:
         path = Path(filepath)
