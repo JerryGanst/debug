@@ -123,8 +123,10 @@ def register_advanced_tools(mcp_server):
                     columns=columns or [],
                     agg_func=agg_func
                 )
-            return result["message"]
+                return result["message"]
                 
+        except PivotError as e:
+            return f"Pivot Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error creating pivot table: {e}")
             raise PivotError(f"Failed to create pivot table: {str(e)}")
