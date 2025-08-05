@@ -61,13 +61,15 @@ def register_data_tools(mcp_server):
                 )
                 
                 if not result or not result.get("cells"):
-                    return "No data found in specified range"
+                    result = {"message": "No data found in specified range"}
+                    return result["message"]
                 
                 # Ensure we return filename instead of full path
                 if 'filename' not in result:
                     result['filename'] = safe_filename
                 
-                # Return as formatted JSON string
+                # For data retrieval functions, we need to return the actual data
+                # This is a case where we can't use result["message"] pattern
                 import json
                 return json.dumps(result, indent=2, default=str)
                 

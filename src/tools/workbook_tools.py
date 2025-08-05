@@ -7,6 +7,8 @@ from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
 from ..utils.workbook import get_workbook_info
 from ..utils.exceptions import WorkbookError, ValidationError
+from ..utils.workbook import create_workbook as create_workbook_impl
+from ..utils.workbook import create_sheet
 
 logger = logging.getLogger("excel-mcp")
 
@@ -39,14 +41,12 @@ def register_workbook_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                from openpyxl import Workbook
-                
                 # Create new workbook
-                wb = Workbook()
-                wb.save(str(file_path))
+                result = create_workbook_impl(str(file_path))
                 
                 logger.info(f"Created workbook: {safe_filename} for user {user_id}")
-                return f"Workbook '{safe_filename}' created successfully"
+                return result["message"].replace(str(file_path), f"'{safe_filename}'")
+                
                 
         except Exception as e:
             logger.error(f"Error creating workbook: {e}")
@@ -77,21 +77,15 @@ def register_workbook_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                from openpyxl import load_workbook
-                
-                wb = load_workbook(str(file_path))
-                
-                # Check if sheet already exists
-                if sheet_name in wb.sheetnames:
-                    return f"Error: Sheet '{sheet_name}' already exists"
-                
-                # Create new worksheet
-                wb.create_sheet(title=sheet_name)
-                wb.save(str(file_path))
-                
-                logger.info(f"Created worksheet '{sheet_name}' in {safe_filename} for user {user_id}")
-                return f"Worksheet '{sheet_name}' created successfully in '{safe_filename}'"
-                
+                from ..utils.workbook import create_sheet
+                try:
+                    result = create_sheet(str(file_path), sheet_name)
+                    logger.info(f"Created worksheet '{sheet_name}' in {safe_filename} for user {user_id}")
+                    return result["message"].replace(sheet_name, f"'{sheet_name}'") + f" in '{safe_filename}'"
+                except WorkbookError as e:
+                    if "already exists" in str(e):
+                        return f"Error: Sheet '{sheet_name}' already exists"
+                    raise
         except Exception as e:
             logger.error(f"Error creating worksheet: {e}")
             raise WorkbookError(f"Failed to create worksheet: {str(e)}")

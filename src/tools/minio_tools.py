@@ -105,7 +105,8 @@ def register_minio_tools(mcp_server):
                 client.fget_object(bucket_name, object_name, str(local_file_path))
                 logger.info(f"Successfully pulled file {safe_filename} from MinIO for user {user_id}")
                 
-                return f"File '{safe_filename}' downloaded successfully from MinIO"
+                result = {"message": f"File '{safe_filename}' downloaded successfully from MinIO"}
+                return result["message"]
                 
         except S3Error as e:
             logger.error(f"Error pulling file from MinIO: {e}")
@@ -161,7 +162,8 @@ def register_minio_tools(mcp_server):
                     local_file_path.unlink()
                     logger.info(f"Removed local file: {safe_filename}")
                     
-                    return f"File uploaded to MinIO as '{modified_filename}'"
+                    result = {"message": f"File uploaded to MinIO as '{modified_filename}'"}
+                    return result["message"]
                     
                 except S3Error as e:
                     logger.error(f"Error pushing file to MinIO: {e}")

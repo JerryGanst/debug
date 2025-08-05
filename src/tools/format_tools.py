@@ -82,7 +82,7 @@ def register_format_tools(mcp_server):
             
             with mcp_server.file_manager.lock_file(file_path):
                 
-                format_range_util(
+                result = format_range_util(
                     filepath=str(file_path),
                     sheet_name=sheet_name,
                     start_cell=start_cell,
@@ -103,7 +103,7 @@ def register_format_tools(mcp_server):
                     conditional_format=conditional_format  # This can be None
                 )
                 
-                return f"Range '{start_cell}':'{end_cell}' formatted successfully in sheet '{sheet_name}' of '{safe_filename}'"
+                return result["message"]
                 
         except (ValidationError, FormattingError) as e:
             return f"Error: {str(e)}"
@@ -252,8 +252,11 @@ def register_format_tools(mcp_server):
                 wb.close()
                 
                 if not validations:
-                    return "No data validation rules found in this worksheet"
+                    result = {"message": "No data validation rules found in this worksheet"}
+                    return result["message"]
                     
+                # For data retrieval functions, we need to return the actual data
+                # This is a case where we can't use result["message"] pattern
                 return json.dumps({
                     "filename": safe_filename,
                     "sheet_name": sheet_name,

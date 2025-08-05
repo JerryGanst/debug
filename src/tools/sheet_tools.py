@@ -356,8 +356,7 @@ def register_sheet_tools(mcp_server):
             with mcp_server.file_manager.lock_file(file_path):
                 from ..utils.sheet import delete_cols
                 result = delete_cols(str(file_path), sheet_name, start_col, count)
-                
-                return f"Deleted {count} column(s) starting at column {start_col} in sheet '{sheet_name}' of '{safe_filename}'"
+                return result["message"]
                 
         except Exception as e:
             logger.error(f"Error deleting columns: {e}")
