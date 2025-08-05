@@ -1,0 +1,11 @@
+MCP_CONFIG:
+  EXCEL_FILES_PATH: ./excel_files
+  PORT: 3210
+  HOST: 0.0.0.0
+  LOG_LEVEL: debug
+
+MINIO_CONFIG:
+  MINIO_ENDPOINT: http://10.180.248.141:9000
+  MINIO_ACCESS_KEY: minioadmin
+  MINIO_SECRET_KEY: G3j+-G]aMX%bc/Wt
+  MINIO_BUCKET: ai-file
