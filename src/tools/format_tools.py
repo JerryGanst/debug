@@ -110,46 +110,6 @@ def register_format_tools(mcp_server):
         except Exception as e:
             logger.error(f"Error formatting range: {e}")
             raise FormattingError(f"Failed to format range: {str(e)}")
-
-    @mcp_server.tool(
-        tags=ToolTags(
-            functional_domains=["excel"],
-            permissions=["read"],
-            resource_types=["validation"],
-            scopes=["user_scoped"]
-        )
-    )
-    def get_validation_info(user_id: str, filename: str, sheet_name: str) -> str:
-        """
-        Get validation information for all cells in a worksheet.
-        
-        Args:
-            user_id: User ID for file organization
-            filename: Name of the Excel file
-            sheet_name: Name of worksheet
-            
-        Returns:
-            JSON string with validation information
-        """
-        try:
-            safe_filename = get_safe_filename(filename)
-            file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
-            with mcp_server.file_manager.lock_file(file_path):
-                from openpyxl import load_workbook
-                wb = load_workbook(str(file_path))
-                ws = wb[sheet_name]
-                validations = get_all_validation_ranges(ws)
-                
-                return json.dumps({
-                    "filename": safe_filename,
-                    "sheet_name": sheet_name,
-                    "validation_rules": validations
-                }, indent=2, default=str)
-                
-        except Exception as e:
-            logger.error(f"Error getting validation info: {e}")
-            raise ValidationError(f"Failed to get validation info: {str(e)}")
         
     @mcp_server.tool(
         tags=ToolTags(
