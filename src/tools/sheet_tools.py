@@ -40,8 +40,8 @@ def register_sheet_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                copy_sheet(str(file_path), source_sheet, target_sheet)
-                return f"Worksheet '{source_sheet}' copied to '{target_sheet}' in '{safe_filename}'"
+                result = copy_sheet(str(file_path), source_sheet, target_sheet)
+                return result["message"]
                 
         except Exception as e:
             logger.error(f"Error copying worksheet: {e}")
@@ -72,9 +72,11 @@ def register_sheet_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                delete_sheet(str(file_path), sheet_name)
-                return f"Worksheet '{sheet_name}' deleted from '{safe_filename}'"
+                result = delete_sheet(str(file_path), sheet_name)
+                return result['message']
                 
+        except (ValidationError, SheetError) as e:
+            return f"Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error deleting worksheet: {e}")
             raise SheetError(f"Failed to delete worksheet: {str(e)}")
@@ -105,9 +107,10 @@ def register_sheet_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                rename_sheet(str(file_path), old_name, new_name)
-                return f"Worksheet renamed from '{old_name}' to '{new_name}' in '{safe_filename}'"
-                
+                result = rename_sheet(str(file_path), old_name, new_name)
+                return result["message"]
+        except (ValidationError, SheetError) as e:
+            return f"Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error renaming worksheet: {e}")
             raise SheetError(f"Failed to rename worksheet: {str(e)}")
@@ -245,9 +248,9 @@ def register_sheet_tools(mcp_server):
             with mcp_server.file_manager.lock_file(file_path):
                 from ..utils.sheet import insert_row
                 result = insert_row(str(file_path), sheet_name, start_row, count)
-                
-                return f"Inserted {count} row(s) starting at row {start_row} in sheet '{sheet_name}' of '{safe_filename}'"
-                
+                return result["message"]
+        except (ValidationError, SheetError) as e:
+            return f"Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error inserting rows: {e}")
             raise SheetError(f"Failed to insert rows: {str(e)}")
@@ -280,10 +283,10 @@ def register_sheet_tools(mcp_server):
             
             with mcp_server.file_manager.lock_file(file_path):
                 from ..utils.sheet import insert_cols
-                result = insert_cols(str(file_path), sheet_name, start_col, count)
-                
-                return f"Inserted {count} column(s) starting at column {start_col} in sheet '{sheet_name}' of '{safe_filename}'"
-                
+                result = insert_cols(full_path, sheet_name, start_col, count)
+                return result["message"]
+        except (ValidationError, SheetError) as e:
+            return f"Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error inserting columns: {e}")
             raise SheetError(f"Failed to insert columns: {str(e)}")
@@ -317,9 +320,9 @@ def register_sheet_tools(mcp_server):
             with mcp_server.file_manager.lock_file(file_path):
                 from ..utils.sheet import delete_rows
                 result = delete_rows(str(file_path), sheet_name, start_row, count)
-                
-                return f"Deleted {count} row(s) starting at row {start_row} in sheet '{sheet_name}' of '{safe_filename}'"
-                
+                return result["message"]
+        except (ValidationError, SheetError) as e:
+            return f"Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error deleting rows: {e}")
             raise SheetError(f"Failed to delete rows: {str(e)}")

@@ -3,13 +3,16 @@ Formatting and validation tools for Excel MCP server.
 """
 
 import logging
+import json
 from typing import Optional, Dict, Any
 from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
 from ..utils.formatting import format_range as format_range_util
-from ..utils.validation import validate_range_in_sheet_operation
+from ..utils.validation import validate_range_in_sheet_operation as validate_range_impl
 from ..utils.cell_validation import get_all_validation_ranges
 from ..utils.exceptions import FormattingError, ValidationError
+from ..utils.sheet import copy_range_operation
+from ..utils.sheet import delete_range_operation
 
 logger = logging.getLogger("excel-mcp")
 
@@ -159,7 +162,7 @@ def register_format_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                validate_range_in_sheet_operation(
+                validate_range_impl(
                     file_path=str(file_path),
                     sheet_name=sheet_name,
                     range_address=range_address,
@@ -213,7 +216,159 @@ def register_format_tools(mcp_server):
                 ws = wb[sheet_name]
                 validations = get_all_validation_ranges(ws)
                 
-                import json
+                return json.dumps({
+                    "filename": safe_filename,
+                    "sheet_name": sheet_name,
+                    "validation_rules": validations
+                }, indent=2, default=str)
+                
+        except Exception as e:
+            logger.error(f"Error getting validation info: {e}")
+            raise ValidationError(f"Failed to get validation info: {str(e)}")
+        
+    @mcp_server.tool(
+        tags=ToolTags(
+            functional_domains=["excel"],
+            permissions=["write"],
+            resource_types=["validation"],
+            scopes=["user_scoped"]
+        )
+    )
+    def copy_range(
+        user_id: str,
+        filename: str,
+        sheet_name: str,
+        source_start: str,
+        source_end: str,
+        target_start: str,
+        target_sheet: Optional[str] = None
+    ) -> str:
+        """Copy a range of cells to another location."""
+        try:
+            safe_filename = get_safe_filename(filename)
+            file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+            result = copy_range_operation(
+                full_path = str(file_path),
+                sheet_name = sheet_name,
+                source_start = source_start,
+                source_end = source_end,
+                target_start = target_start,
+                target_sheet = target_sheet or sheet_name  # Use source sheet if target_sheet is None
+            )
+            return result["message"]
+        except (ValidationError, SheetError) as e:
+            return f"Error: {str(e)}"
+        except Exception as e:
+            logger.error(f"Error copying range: {e}")
+            raise
+        
+    @mcp_server.tool(
+        tags=ToolTags(
+            functional_domains=["excel"],
+            permissions=["write"],
+            resource_types=["validation"],
+            scopes=["user_scoped"]
+        )
+    )
+    def delete_range(
+        user_id: str,
+        filename: str,
+        sheet_name: str,
+        start_cell: str,
+        end_cell: str,
+        shift_direction: str = "up"
+    ) -> str:
+        """Delete a range of cells and shift remaining cells."""
+        try:
+            safe_filename = get_safe_filename(filename)
+            file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+            result = delete_range_operation(
+                filepath=str(file_path),
+                sheet_name=sheet_name,
+                start_cell=start_cell,
+                end_cell=end_cell,
+                shift_direction=shift_direction
+            )
+            return result["message"]
+        except (ValidationError, SheetError) as e:
+            return f"Error: {str(e)}"
+        except Exception as e:
+            logger.error(f"Error deleting range: {e}")
+            raise
+        
+    @mcp_server.tool(
+            tags=ToolTags(
+                functional_domains=["excel"],
+                permissions=["read"],
+                resource_types=["validation"],
+                scopes=["user_scoped"]
+            )
+        )
+    def validate_excel_range(
+        user_id: str,
+        filename: str,
+        sheet_name: str,
+        start_cell: str,
+        end_cell: Optional[str] = None
+    ) -> str:
+        """Validate if a range exists and is properly formatted."""
+        try:
+            safe_filename = get_safe_filename(filename)
+            file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+            range_str = start_cell if not end_cell else f"{start_cell}:{end_cell}"
+            result = validate_range_impl(str(file_path), sheet_name, range_str)
+            return result["message"]
+        except ValidationError as e:
+            return f"Error: {str(e)}"
+        except Exception as e:
+            logger.error(f"Error validating range: {e}")
+            raise ValidationError(f"Failed to validate range: {str(e)}")
+
+    @mcp_server.tool(
+        tags=ToolTags(
+            functional_domains=["excel"],
+            permissions=["read"],
+            resource_types=["validation"],
+            scopes=["user_scoped"]
+        )
+    )
+    def get_data_validation_info(
+        user_id: str,
+        filename: str,
+        sheet_name: str
+    ) -> str:
+        """
+        Get all data validation rules in a worksheet.
+        
+        This tool helps identify which cell ranges have validation rules 
+        and what types of validation are applied.
+        
+        Args:
+            user_id: User ID for file organization
+            filename: Name of the Excel file
+            sheet_name: Name of worksheet
+            
+        Returns:
+            JSON string containing all validation rules in the worksheet
+        """
+        try:
+            safe_filename = get_safe_filename(filename)
+            file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+            
+            with mcp_server.file_manager.lock_file(file_path):
+                from openpyxl import load_workbook
+                
+                wb = load_workbook(str(file_path), read_only=False)
+                if sheet_name not in wb.sheetnames:
+                    return f"Error: Sheet '{sheet_name}' not found"
+                    
+                ws = wb[sheet_name]
+                validations = get_all_validation_ranges(ws)
+                wb.close()
+                
+                if not validations:
+                    return "No data validation rules found in this worksheet"
+                    
                 return json.dumps({
                     "filename": safe_filename,
                     "sheet_name": sheet_name,

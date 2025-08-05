@@ -6,9 +6,9 @@ import logging
 from typing import Optional, List, Dict, Any
 from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
-from ..utils.chart import create_chart_in_sheet
-from ..utils.pivot import create_pivot_table
-from ..utils.tables import create_excel_table
+from ..utils.chart import create_chart_in_sheet as create_chart_impl
+from ..utils.pivot import create_pivot_table as create_pivot_table_impl
+from ..utils.tables import create_excel_table as create_table_impl
 from ..utils.exceptions import ChartError, PivotError, DataError
 
 logger = logging.getLogger("excel-mcp")
@@ -59,7 +59,7 @@ def register_advanced_tools(mcp_server):
             
             with mcp_server.file_manager.lock_file(file_path):
                 result = create_chart_impl(
-                    filepath=full_path,
+                    filepath=str(file_path),
                     sheet_name=sheet_name,
                     data_range=data_range,
                     chart_type=chart_type,
@@ -87,7 +87,7 @@ def register_advanced_tools(mcp_server):
             scopes=["user_scoped"]
         )
     )
-    def create_pivot_table_tool(
+    def create_pivot_table(
         user_id: str,
         filename: str,
         sheet_name: str,
@@ -95,7 +95,7 @@ def register_advanced_tools(mcp_server):
         rows: List[str],
         values: List[str],
         columns: Optional[List[str]] = None,
-        agg_func: str = "sum"
+        agg_func: str = "mean"
     ) -> str:
         """
         Create a pivot table from data range.
@@ -118,17 +118,16 @@ def register_advanced_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                create_pivot_table(
+                result = create_pivot_table_impl(
                     filepath=str(file_path),
                     sheet_name=sheet_name,
                     data_range=data_range,
                     rows=rows,
                     values=values,
-                    columns=columns,
+                    columns=columns or [],
                     agg_func=agg_func
                 )
-                
-                return f"Pivot table created successfully in sheet '{sheet_name}' of '{safe_filename}'"
+            return result["message"]
                 
         except Exception as e:
             logger.error(f"Error creating pivot table: {e}")
@@ -147,8 +146,8 @@ def register_advanced_tools(mcp_server):
         filename: str,
         sheet_name: str,
         data_range: str,
-        table_name: str,
-        has_headers: bool = True
+        table_name: Optional[str] = None,
+        table_style: str = "TableStyleMedium9"
     ) -> str:
         """
         Create an Excel table from a data range.
@@ -159,7 +158,7 @@ def register_advanced_tools(mcp_server):
             sheet_name: Name of worksheet
             data_range: Range to convert to table (e.g., 'A1:D10')
             table_name: Name for the table
-            has_headers: Whether the range includes headers
+            table_style: Table's style
             
         Returns:
             Success message with filename
@@ -169,16 +168,17 @@ def register_advanced_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             
             with mcp_server.file_manager.lock_file(file_path):
-                create_excel_table(
-                    file_path=str(file_path),
+                result = create_table_impl(
+                    filepath=str(file_path),
                     sheet_name=sheet_name,
                     data_range=data_range,
                     table_name=table_name,
-                    has_headers=has_headers
+                    table_style=table_style
                 )
-                
-                return f"Table '{table_name}' created successfully in sheet '{sheet_name}' of '{safe_filename}'"
-                
+                return result["message"]
+           
+        except DataError as e:
+            return f"Data Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error creating table: {e}")
             raise DataError(f"Failed to create table: {str(e)}")

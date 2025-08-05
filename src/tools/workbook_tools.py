@@ -126,16 +126,10 @@ def register_workbook_tools(mcp_server):
             
             # Use shared lock for read operation
             with mcp_server.file_manager.lock_file(file_path):
-                result = get_workbook_info(str(file_path), include_ranges)
-                
-                # Return just the filename in metadata, not full path
-                if isinstance(result, dict) and 'file_path' in result:
-                    result['filename'] = safe_filename
-                    del result['file_path']  # Remove full path to avoid confusion
-                
-                import json
-                return json.dumps(result, indent=2, default=str)
-                
+                result = get_workbook_info(str(file_path), include_ranges=include_ranges)
+                return str(result)
+        except WorkbookError as e:
+            return f"Error: {str(e)}"
         except Exception as e:
             logger.error(f"Error getting workbook metadata: {e}")
-            raise WorkbookError(f"Failed to get workbook metadata: {str(e)}")
+            raise
