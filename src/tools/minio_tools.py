@@ -9,6 +9,7 @@ from minio.error import S3Error
 from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
 from ..utils.exceptions import DataError
+from fastmcp.exceptions import ToolError
 
 logger = logging.getLogger("excel-mcp")
 
@@ -21,6 +22,43 @@ def _get_minio_client(config):
         secret_key=config.minio.secret_key,
         secure=False,
     )
+
+
+def _get_unique_filename(client, bucket_name, user_id, base_filename):
+    """Generate a unique filename by checking existing files in MinIO."""
+    # First check if the base filename exists
+    prefix = f"private/{user_id}/{base_filename}"
+    objects = list(client.list_objects(bucket_name, prefix=prefix, recursive=False))
+    
+    # If base filename doesn't exist, return it as is
+    if not objects:
+        return base_filename
+    
+    # If base filename exists, try numbered versions
+    file_stem = base_filename
+    file_suffix = ""
+    
+    # Separate file extension if it exists
+    if "." in base_filename:
+        file_parts = base_filename.rsplit(".", 1)
+        file_stem = file_parts[0]
+        file_suffix = f".{file_parts[1]}"
+    
+    # Try numbered versions starting from 1
+    counter = 1
+    while True:
+        new_filename = f"{file_stem}({counter}){file_suffix}"
+        prefix = f"private/{user_id}/{new_filename}"
+        objects = list(client.list_objects(bucket_name, prefix=prefix, recursive=False))
+    
+        # If this filename doesn't exist, return it
+        if not objects:
+            return new_filename
+    
+        counter += 1
+        # Safety check to prevent infinite loops
+        if counter > 1000:
+            raise ToolError("Unable to generate unique filename after 1000 attempts.")
 
 
 def register_minio_tools(mcp_server):
@@ -62,12 +100,13 @@ def register_minio_tools(mcp_server):
                 }
                 file_list.append(file_info)
                 logger.info(f"Found file: {filename} for user {user_id}")
-            
-            return file_list
-            
-        except Exception as e:
+            return {"files": file_list}
+        except S3Error as e:
             logger.error(f"Error listing MinIO files: {e}")
-            raise DataError(f"Failed to list MinIO files: {str(e)}")
+            raise ToolError("Failed to list files from storage.")
+        except Exception as e:
+            logger.error(f"Unexpected error listing MinIO files: {e}")
+            raise ToolError("An unexpected error occurred while listing files.")
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -105,15 +144,14 @@ def register_minio_tools(mcp_server):
                 client.fget_object(bucket_name, object_name, str(local_file_path))
                 logger.info(f"Successfully pulled file {safe_filename} from MinIO for user {user_id}")
                 
-                result = {"message": f"File '{safe_filename}' downloaded successfully from MinIO"}
-                return result["message"]
+                return {"message": f"File '{safe_filename}' downloaded successfully from MinIO"}
                 
         except S3Error as e:
             logger.error(f"Error pulling file from MinIO: {e}")
-            raise DataError(f"Failed to pull file from MinIO: {str(e)}")
+            raise ToolError("Failed to download file from storage.")
         except Exception as e:
             logger.error(f"Unexpected error pulling file: {e}")
-            raise DataError(f"Failed to pull file: {str(e)}")
+            raise ToolError("An unexpected error occurred while downloading the file.")
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -146,11 +184,10 @@ def register_minio_tools(mcp_server):
             if not local_file_path.is_file():
                 raise FileNotFoundError(f"File not found: {safe_filename}")
             
-            # Create modified file name with (mod) extension
-            file_stem = local_file_path.stem
-            file_suffix = local_file_path.suffix
-            modified_filename = f"{file_stem}(mod){file_suffix}"
-            object_name = f"private/{user_id}/{modified_filename}"
+            # Generate a unique filename to avoid overwriting existing files
+            base_filename = local_file_path.name
+            unique_filename = _get_unique_filename(client, bucket_name, user_id, base_filename)
+            object_name = f"private/{user_id}/{unique_filename}"
             
             with mcp_server.file_manager.lock_file(local_file_path):
                 try:
@@ -162,13 +199,12 @@ def register_minio_tools(mcp_server):
                     local_file_path.unlink()
                     logger.info(f"Removed local file: {safe_filename}")
                     
-                    result = {"message": f"File uploaded to MinIO as '{modified_filename}'"}
-                    return result["message"]
+                    return {"message": f"File uploaded to MinIO as '{unique_filename}'"}
                     
                 except S3Error as e:
                     logger.error(f"Error pushing file to MinIO: {e}")
-                    raise DataError(f"Failed to upload file to MinIO: {str(e)}")
+                    raise ToolError("Failed to upload file to storage.")
                 
         except Exception as e:
             logger.error(f"Error in push_minio_file: {e}")
-            raise DataError(f"Failed to push file: {str(e)}")
+            raise ToolError("An unexpected error occurred while uploading the file.")

@@ -56,7 +56,6 @@ def register_advanced_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = create_chart_impl(
                     filepath=str(file_path),
@@ -68,12 +67,14 @@ def register_advanced_tools(mcp_server):
                     x_axis=x_axis,
                     y_axis=y_axis
                 )
-                return result['message']
+                safe_result = result["message"].replace(str(file_path), safe_filename)
+                return safe_result
         except (ValidationError, ChartError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), safe_filename)
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating chart: {e}")
-            raise ChartError(f"Failed to create chart: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -112,7 +113,6 @@ def register_advanced_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = create_pivot_table_impl(
                     filepath=str(file_path),
@@ -123,13 +123,14 @@ def register_advanced_tools(mcp_server):
                     columns=columns or [],
                     agg_func=agg_func
                 )
-                return result["message"]
-                
+                safe_result = result["message"].replace(str(file_path), safe_filename)
+                return safe_result
         except PivotError as e:
-            return f"Pivot Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), safe_filename)
+            return f"Pivot Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating pivot table: {e}")
-            raise PivotError(f"Failed to create pivot table: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -164,7 +165,6 @@ def register_advanced_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = create_table_impl(
                     filepath=str(file_path),
@@ -173,10 +173,11 @@ def register_advanced_tools(mcp_server):
                     table_name=table_name,
                     table_style=table_style
                 )
-                return result["message"]
-           
+                safe_result = result["message"].replace(str(file_path), safe_fileapply_formulaname)
+                return safe_result
         except DataError as e:
-            return f"Data Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), safe_filename)
+            return f"Data Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating table: {e}")
-            raise DataError(f"Failed to create table: {str(e)}")
+            raise

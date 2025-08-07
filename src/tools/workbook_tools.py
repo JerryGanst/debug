@@ -31,7 +31,6 @@ def register_workbook_tools(mcp_server):
         Args:
             user_id: User ID for file organization
             filename: Name of the workbook file to create
-            
         Returns:
             Success message with the created filename
         """
@@ -39,18 +38,19 @@ def register_workbook_tools(mcp_server):
             # Ensure we only work with safe filenames
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 # Create new workbook
                 result = create_workbook_impl(str(file_path))
                 
                 logger.info(f"Created workbook: {safe_filename} for user {user_id}")
-                return result["message"].replace(str(file_path), f"'{safe_filename}'")
-                
-                
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
+        except WorkbookError as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating workbook: {e}")
-            raise WorkbookError(f"Failed to create workbook: {str(e)}")
+            raise
     
     @mcp_server.tool(
         tags=ToolTags(
@@ -75,20 +75,17 @@ def register_workbook_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                from ..utils.workbook import create_sheet
-                try:
                     result = create_sheet(str(file_path), sheet_name)
                     logger.info(f"Created worksheet '{sheet_name}' in {safe_filename} for user {user_id}")
-                    return result["message"].replace(sheet_name, f"'{sheet_name}'") + f" in '{safe_filename}'"
-                except WorkbookError as e:
-                    if "already exists" in str(e):
-                        return f"Error: Sheet '{sheet_name}' already exists"
-                    raise
+                    safe_result = result["message"].replace(sheet_name, f"'{sheet_name}'")
+                    return safe_result
+        except (ValidationError, WorkbookError) as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating worksheet: {e}")
-            raise WorkbookError(f"Failed to create worksheet: {str(e)}")
+            raise
     
     @mcp_server.tool(
         tags=ToolTags(
@@ -109,7 +106,7 @@ def register_workbook_tools(mcp_server):
         Args:
             user_id: User ID for file organization
             filename: Name of the workbook file
-            include_ranges: Whether to include range information
+            include_ranges: Whether to include range information, default to false
             
         Returns:
             JSON string with workbook metadata
@@ -117,13 +114,13 @@ def register_workbook_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
-            # Use shared lock for read operation
             with mcp_server.file_manager.lock_file(file_path):
                 result = get_workbook_info(str(file_path), include_ranges=include_ranges)
-                return str(result)
+                safe_result = str(result).replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except WorkbookError as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error getting workbook metadata: {e}")
             raise

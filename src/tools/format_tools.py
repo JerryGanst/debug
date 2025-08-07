@@ -5,14 +5,14 @@ Formatting and validation tools for Excel MCP server.
 import logging
 import json
 from typing import Optional, Dict, Any
+from openpyxl import load_workbook
 from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
-from ..utils.formatting import format_range as format_range_util
+from ..utils.formatting import format_range as format_range_func
 from ..utils.validation import validate_range_in_sheet_operation as validate_range_impl
 from ..utils.cell_validation import get_all_validation_ranges
-from ..utils.exceptions import FormattingError, ValidationError
-from ..utils.sheet import copy_range_operation
-from ..utils.sheet import delete_range_operation
+from ..utils.exceptions import FormattingError, ValidationError, SheetError
+from ..utils.sheet import copy_range_operation, delete_range_operation
 
 logger = logging.getLogger("excel-mcp")
 
@@ -79,10 +79,8 @@ def register_format_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                
-                result = format_range_util(
+                result = format_range_func(
                     filepath=str(file_path),
                     sheet_name=sheet_name,
                     start_cell=start_cell,
@@ -102,14 +100,14 @@ def register_format_tools(mcp_server):
                     protection=protection,  # This can be None
                     conditional_format=conditional_format  # This can be None
                 )
-                
-                return result["message"]
-                
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, FormattingError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error formatting range: {e}")
-            raise FormattingError(f"Failed to format range: {str(e)}")
+            raise
         
     @mcp_server.tool(
         tags=ToolTags(
@@ -132,17 +130,20 @@ def register_format_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            result = copy_range_operation(
-                full_path = str(file_path),
-                sheet_name = sheet_name,
-                source_start = source_start,
-                source_end = source_end,
-                target_start = target_start,
-                target_sheet = target_sheet or sheet_name  # Use source sheet if target_sheet is None
-            )
-            return result["message"]
+            with mcp_server.file_manager.lock_file(file_path):
+                result = copy_range_operation(
+                    full_path = str(file_path),
+                    sheet_name = sheet_name,
+                    source_start = source_start,
+                    source_end = source_end,
+                    target_start = target_start,
+                    target_sheet = target_sheet or sheet_name  # Use source sheet if target_sheet is None
+                )
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, SheetError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error copying range: {e}")
             raise
@@ -167,16 +168,19 @@ def register_format_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            result = delete_range_operation(
-                filepath=str(file_path),
-                sheet_name=sheet_name,
-                start_cell=start_cell,
-                end_cell=end_cell,
-                shift_direction=shift_direction
-            )
-            return result["message"]
+            with mcp_server.file_manager.lock_file(file_path):
+                result = delete_range_operation(
+                    filepath=str(file_path),
+                    sheet_name=sheet_name,
+                    start_cell=start_cell,
+                    end_cell=end_cell,
+                    shift_direction=shift_direction
+                )
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, SheetError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error deleting range: {e}")
             raise
@@ -200,14 +204,17 @@ def register_format_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            range_str = start_cell if not end_cell else f"{start_cell}:{end_cell}"
-            result = validate_range_impl(str(file_path), sheet_name, range_str)
-            return result["message"]
-        except ValidationError as e:
-            return f"Error: {str(e)}"
+            with mcp_server.file_manager.lock_file(file_path):
+                range_str = start_cell if not end_cell else f"{start_cell}:{end_cell}"
+                result = validate_range_impl(str(file_path), sheet_name, range_str)
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
+        except (ValidationError) as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error validating range: {e}")
-            raise ValidationError(f"Failed to validate range: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -239,24 +246,17 @@ def register_format_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                from openpyxl import load_workbook
-                
                 wb = load_workbook(str(file_path), read_only=False)
                 if sheet_name not in wb.sheetnames:
                     return f"Error: Sheet '{sheet_name}' not found"
-                    
                 ws = wb[sheet_name]
                 validations = get_all_validation_ranges(ws)
                 wb.close()
-                
                 if not validations:
                     result = {"message": "No data validation rules found in this worksheet"}
-                    return result["message"]
-                    
-                # For data retrieval functions, we need to return the actual data
-                # This is a case where we can't use result["message"] pattern
+                    safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                    return safe_result
                 return json.dumps({
                     "filename": safe_filename,
                     "sheet_name": sheet_name,
@@ -265,4 +265,4 @@ def register_format_tools(mcp_server):
                 
         except Exception as e:
             logger.error(f"Error getting validation info: {e}")
-            raise ValidationError(f"Failed to get validation info: {str(e)}")
+            raise

@@ -1,7 +1,7 @@
 """
 Data manipulation tools for Excel MCP server.
 """
-
+import json
 import logging
 from typing import List, Optional
 from ..core.tag_system import ToolTags
@@ -51,7 +51,6 @@ def register_data_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = read_excel_range_with_metadata(
                     str(file_path), 
@@ -59,23 +58,12 @@ def register_data_tools(mcp_server):
                     start_cell, 
                     end_cell
                 )
-                
                 if not result or not result.get("cells"):
-                    result = {"message": "No data found in specified range"}
-                    return result["message"]
-                
-                # Ensure we return filename instead of full path
-                if 'filename' not in result:
-                    result['filename'] = safe_filename
-                
-                # For data retrieval functions, we need to return the actual data
-                # This is a case where we can't use result["message"] pattern
-                import json
+                    return "No data found in specified range"
                 return json.dumps(result, indent=2, default=str)
-                
         except Exception as e:
             logger.error(f"Error reading data: {e}")
-            raise DataError(f"Failed to read data: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -108,18 +96,16 @@ def register_data_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = write_data(str(file_path), sheet_name, data, start_cell)
-                
-                # Return success message with filename only
-                return result["message"]
-                
+                safe_result = result["message"].replace(str(file_path), safe_filename)
+                return safe_result
         except (ValidationError, DataError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), safe_filename)
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error writing data: {e}")
-            raise DataError(f"Failed to write data: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -152,17 +138,18 @@ def register_data_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                # first validate the formula
                 validation = validate_formula_impl(str(file_path), sheet_name, cell, formula)
                 if isinstance(validation, dict) and "error" in validation:
-                    return f"Error: {validation['error']}"
+                    safe_error = validation["error"].replace(str(file_path), safe_filename)
+                    return f"Error: {safe_error}"
                 # then apply the formula
                 result = apply_formula_impl(str(file_path), sheet_name, cell, formula)
-                return result["message"]
+                safe_result = result["message"].replace(str(file_path), safe_filename)
+                return safe_result
         except (ValidationError, CalculationError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), safe_filename)
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error applying formula: {e}")
             raise
@@ -188,9 +175,11 @@ def register_data_tools(mcp_server):
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
             with mcp_server.file_manager.lock_file(file_path):
                 result = validate_formula_impl(str(file_path), sheet_name, cell, formula)
-                return result["message"]
+                safe_result = result["message"].replace(str(file_path), safe_filename)
+                return safe_result
         except (ValidationError, CalculationError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), safe_filename)
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error validating formula: {e}")
             raise

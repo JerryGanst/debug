@@ -5,8 +5,19 @@ Sheet management tools for Excel MCP server.
 import logging
 from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
-from ..utils.sheet import copy_sheet, delete_sheet, rename_sheet, merge_range, unmerge_range, get_merged_ranges
-from ..utils.exceptions import SheetError
+from ..utils.sheet import (
+    copy_sheet, 
+    delete_sheet, 
+    rename_sheet, 
+    merge_range, 
+    unmerge_range, 
+    get_merged_ranges, 
+    insert_row, 
+    insert_cols, 
+    delete_rows,
+    delete_cols
+)
+from ..utils.exceptions import SheetError, ValidationError
 
 logger = logging.getLogger("excel-mcp")
 
@@ -38,14 +49,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = copy_sheet(str(file_path), source_sheet, target_sheet)
-                return result["message"]
-                
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
+        except (ValidationError, SheetError) as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error copying worksheet: {e}")
-            raise SheetError(f"Failed to copy worksheet: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -70,16 +83,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = delete_sheet(str(file_path), sheet_name)
-                return result['message']
-                
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, SheetError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error deleting worksheet: {e}")
-            raise SheetError(f"Failed to delete worksheet: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -105,15 +118,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = rename_sheet(str(file_path), old_name, new_name)
-                return result["message"]
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, SheetError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error renaming worksheet: {e}")
-            raise SheetError(f"Failed to rename worksheet: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -139,14 +153,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = merge_range(str(file_path), sheet_name, start_cell, end_cell)
-                return result["message"]
-                
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
+        except (ValidationError, SheetError) as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error merging cells: {e}")
-            raise SheetError(f"Failed to merge cells: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -172,14 +188,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
                 result = unmerge_range(str(file_path), sheet_name, start_cell, end_cell)
-                return result["message"]
-                
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
+        except (ValidationError, SheetError) as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error unmerging cells: {e}")
-            raise SheetError(f"Failed to unmerge cells: {str(e)}")
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -189,7 +207,7 @@ def register_sheet_tools(mcp_server):
             scopes=["user_scoped"]
         )
     )
-    def get_merged_cell_ranges(user_id: str, filename: str, sheet_name: str) -> str:
+    def get_merged_cells(user_id: str, filename: str, sheet_name: str) -> str:
         """
         Get all merged cell ranges in the worksheet.
         
@@ -204,20 +222,17 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                ranges = get_merged_ranges(str(file_path), sheet_name)
-                
-                import json
-                return json.dumps({
-                    "filename": safe_filename,
-                    "sheet_name": sheet_name,
-                    "merged_ranges": ranges
-                }, indent=2)
-                
+                result = str(get_merged_ranges(str(file_path), sheet_name))
+                safe_result = result.replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
+        except (ValidationError, SheetError) as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
-            logger.error(f"Error getting merged ranges: {e}")
-            raise SheetError(f"Failed to get merged ranges: {str(e)}")
+            logger.error(f"Error getting merged cells: {e}")
+            raise
+
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -244,16 +259,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                from ..utils.sheet import insert_row
                 result = insert_row(str(file_path), sheet_name, start_row, count)
-                return result["message"]
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, SheetError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
-            logger.error(f"Error inserting rows: {e}")
-            raise SheetError(f"Failed to insert rows: {str(e)}")
+            logger.error(f"Error inserting rows: {e}") 
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -280,16 +295,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                from ..utils.sheet import insert_cols
                 result = insert_cols(str(file_path), sheet_name, start_col, count)
-                return result["message"]
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, SheetError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
-            logger.error(f"Error inserting columns: {e}")
-            raise SheetError(f"Failed to insert columns: {str(e)}")
+            logger.error(f"Error inserting columns: {e}") 
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -316,16 +331,16 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                from ..utils.sheet import delete_rows
                 result = delete_rows(str(file_path), sheet_name, start_row, count)
-                return result["message"]
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
         except (ValidationError, SheetError) as e:
-            return f"Error: {str(e)}"
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
-            logger.error(f"Error deleting rows: {e}")
-            raise SheetError(f"Failed to delete rows: {str(e)}")
+            logger.error(f"Error deleting rows: {e}") 
+            raise
 
     @mcp_server.tool(
         tags=ToolTags(
@@ -352,12 +367,13 @@ def register_sheet_tools(mcp_server):
         try:
             safe_filename = get_safe_filename(filename)
             file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
-            
             with mcp_server.file_manager.lock_file(file_path):
-                from ..utils.sheet import delete_cols
                 result = delete_cols(str(file_path), sheet_name, start_col, count)
-                return result["message"]
-                
+                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                return safe_result
+        except (ValidationError, SheetError) as e:
+            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error deleting columns: {e}")
-            raise SheetError(f"Failed to delete columns: {str(e)}")
+            raise
