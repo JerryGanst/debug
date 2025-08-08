@@ -1,117 +1,151 @@
 """
-FastMCP 2.0 Server with tag-based tool filtering.
+Main FastMCP 2.0 Excel Server.
 """
 
 import logging
+import os
+from pathlib import Path
 from typing import Dict, List, Set, Any, Optional
-from fastmcp import FastMCP
-from .tag_system import ToolTags, AgentProfile, get_agent_profile
-from .config import ServerConfig
-from .file_manager import FileManager
 
+# Core components
+from .config import load_config
+from .file_manager import FileManager
+from fastmcp import FastMCP
+
+# Tool registration modules
+from ..tools.excel_read import register_excel_read_tools
+from ..tools.excel_write import register_excel_write_tools
+from ..tools.minio_tools import register_minio_tools
+
+# Setup logging
+LOG_FILE = Path(__file__).parent.parent / "excel-mcp.log"
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()  # Also log to console
+    ],
+)
 logger = logging.getLogger("excel-mcp")
 
 
-class TaggedFastMCP:
+class SimpleFastMCP:
     """
-    FastMCP server wrapper with tag-based tool filtering.
+    Simple FastMCP server wrapper.
     """
     
-    def __init__(self, name: str, config: ServerConfig):
-        self._mcp = FastMCP(name)
-        self.config = config
-        self.file_manager = FileManager(config)
-        self._tool_tags: Dict[str, ToolTags] = {}
-        self._current_agent_profile: Optional[AgentProfile] = None
-    
-    def set_agent_profile(self, agent_type: str = None, custom_tags: List[str] = None):
+    def __init__(self, name: str, config_path: str = None):
         """
-        Set the current agent profile for tool filtering.
+        Initialize the MCP server.
         
         Args:
-            agent_type: Predefined agent type (e.g., 'excel_analyst')
-            custom_tags: Custom tags for creating a custom agent profile
+            name: Name of the server
+            config_path: Path to configuration file (optional)
         """
-        if agent_type:
-            self._current_agent_profile = get_agent_profile(agent_type)
-        elif custom_tags:
-            from .tag_system import create_custom_agent
-            self._current_agent_profile = create_custom_agent("custom", custom_tags)
-        else:
-            self._current_agent_profile = None
+        self.config = load_config(config_path)
+        self._mcp = FastMCP(name)
+        self.file_manager = FileManager(self.config)
+        self._register_all_tools()
+    
+    def _register_all_tools(self):
+        """Register all tool modules with the MCP server."""
+        logger.info("Registering tool modules...")
+        
+        # Register all tool categories
+        register_excel_read_tools(self)
+        register_excel_write_tools(self)
+        register_minio_tools(self)
+        
+        logger.info("Registered tools")
     
     def tool(self, **kwargs):
         """
-        Decorator for registering tools with tags.
+        Decorator for registering tools.
         
         Args:
-            tags: ToolTags instance defining the tool's capabilities and permissions
-            **kwargs: Additional arguments passed to FastMCP tool decorator
+            **kwargs: Arguments passed to FastMCP tool decorator
         """
-        # Extract our custom tags parameter
-        tags = kwargs.pop('tags', None)
-        
         def decorator(func):
             # Register with FastMCP
-            decorated_func = self._mcp.tool()(func)
-            
-            # Store tags for this tool
-            if tags:
-                self._tool_tags[func.__name__] = tags
-            
+            decorated_func = self._mcp.tool(**kwargs)(func)
             return decorated_func
         
         return decorator
     
-    def run(self, **kwargs):
-        """Run the underlying FastMCP server."""
-        return self._mcp.run(**kwargs)
-    
-    def get_available_tools(self, agent_profile: AgentProfile = None) -> List[str]:
+    def run(self, 
+            host: str = None, 
+            port: int = None, 
+            log_level: str = None):
         """
-        Get list of tools available to a specific agent profile.
+        Start the MCP server.
         
         Args:
-            agent_profile: Agent profile to check against, uses current if None
-            
-        Returns:
-            List of tool names the agent can access
+            host: Host to bind to (overrides config)
+            port: Port to bind to (overrides config)
+            log_level: Log level (overrides config)
         """
-        if agent_profile is None:
-            agent_profile = self._current_agent_profile
+        # Use provided values or fallback to config
+        host = host or self.config.mcp.host
+        port = port or self.config.mcp.port
+        log_level = log_level or self.config.mcp.log_level
         
-        if agent_profile is None:
-            # No filtering, return all tools
-            return list(self._tool_tags.keys())
+        # Set up directory
+        os.makedirs(self.config.mcp.excel_files_path, exist_ok=True)
         
-        available_tools = []
-        for tool_name, tool_tags in self._tool_tags.items():
-            if agent_profile.can_access_tool(tool_tags):
-                available_tools.append(tool_name)
-        
-        return available_tools
+        try:
+            logger.info(f"Starting Excel MCP server (files directory: {self.config.mcp.excel_files_path})")
+            logger.info(f"Host: {host}")
+            logger.info(f"Port: {port}")
+            logger.info(f"Log level: {log_level}")
+            
+            self._mcp.run(
+                transport="http",
+                host=host,
+                port=port,
+                log_level=log_level,
+            )
+        except KeyboardInterrupt:
+            logger.info("Server stopped by user")
+            # Clean up temporary files
+            try:
+                import shutil
+                if hasattr(self, 'config') and hasattr(self.config, 'mcp') and hasattr(self.config.mcp, 'excel_files_path'):
+                    excel_files_dir = Path(self.config.mcp.excel_files_path)
+                    if excel_files_dir.exists():
+                        # Remove all user directories under excel_files_path
+                        for item in excel_files_dir.iterdir():
+                            if item.is_dir():
+                                shutil.rmtree(item)
+                                logger.info(f"Removed temporary directory: {item}")
+            except Exception as cleanup_error:
+                logger.error(f"Error during cleanup: {cleanup_error}")
+        except Exception as e:
+            logger.error(f"Server failed: {e}")
+            raise
+        finally:
+            logger.info("Server shutdown complete")
+
+
+def main():
+    """Main entry point for the server."""
+    import argparse
     
-    def filter_tools_for_agent(self, agent_type: str = None) -> Dict[str, Any]:
-        """
-        Filter and return tools available to a specific agent type.
-        
-        Args:
-            agent_type: Type of agent to filter tools for
-            
-        Returns:
-            Dictionary of available tools with their metadata
-        """
-        if agent_type:
-            profile = get_agent_profile(agent_type)
-        else:
-            profile = self._current_agent_profile
-        
-        available_tools = self.get_available_tools(profile)
-        
-        # This would integrate with FastMCP's tool listing functionality
-        return {
-            "agent_type": agent_type or "current",
-            "available_tools": available_tools,
-            "total_tools": len(self._tool_tags),
-            "filtered_tools": len(available_tools)
-        }
+    parser = argparse.ArgumentParser(description="Luxshare MCP Server")
+    parser.add_argument("--config", help="Path to configuration file")
+    parser.add_argument("--host", help="Host to bind to")
+    parser.add_argument("--port", type=int, help="Port to bind to")
+    parser.add_argument("--log-level", help="Log level")
+    
+    args = parser.parse_args()
+    
+    server = SimpleFastMCP("Luxshare MCP Server", config_path=args.config)
+    server.run(
+        host=args.host,
+        port=args.port,
+        log_level=args.log_level
+    )
+
+
+if __name__ == "__main__":
+    main()

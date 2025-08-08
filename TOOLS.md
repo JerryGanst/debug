@@ -1,75 +1,75 @@
-# Excel MCP Server 2.0 - Tools Documentation
+# Excel MCP Server Tools
 
-This document provides comprehensive information about all available tools in the Excel MCP Server 2.0 with tag-based filtering.
+This document provides detailed information about all available tools in the Excel MCP server.
 
-## 🏷️ Tag-Based Tool Access
+## MinIO Storage Operations
 
-**NEW in v2.0**: Tools are now filtered based on agent type. Different agents see different subsets of tools based on their permissions and functional requirements.
+### list_minio_files
 
-### Agent Profiles
+List all files in the MinIO bucket for a specific user.
 
-| Agent Type | Description | Tool Count | Access Level |
-|------------|-------------|------------|--------------|
-| `excel_analyst` | Read-only data analysis | 6 | Data reading only |
-| `excel_editor` | Full Excel editing | 22 | Complete Excel manipulation |
-| `minio_reader` | Cloud storage read access | 3 | MinIO file listing/downloading |
-| `minio_manager` | Cloud storage management | 3 | Full MinIO operations |
-| `data_scientist` | Advanced analytics | 22 | Charts, pivots, data analysis |
-| `report_generator` | Report creation | 22 | Formatting, charts, data |
-| `admin` | Full system access | 25 | All available tools |
+```python
+list_minio_files(user_id: str) -> List[Dict[str, Any]]
+```
 
-## 📋 Tool Categories
+- `user_id`: User ID for accessing user-specific files.
+- Returns: A list of dictionaries containing file information. Each dictionary has the following keys:
+  - `filename` (str): The name of the file
+  - `size` (int): The size of the file in bytes
+  - `last_modified` (str, optional): The last modified timestamp in ISO format
 
-### 🏷️ Tags Legend
-- **Domain**: `excel`, `minio`
-- **Permission**: `read`, `write`, `delete`, `admin`
-- **Resource**: `workbook`, `sheet`, `data`, `chart`, `pivot`, `format`, `storage`
-- **Scope**: `user_scoped`, `global`, `shared`
+### pull_minio_file
 
----
+Download a file from MinIO to the local Excel directory.
 
-## 📊 Workbook Operations
+```python
+pull_minio_file(user_id: str, filename: str) -> str
+```
+
+- `user_id`: User ID for accessing user-specific files.
+- `filename`: Name of the file in MinIO.
+- Returns: Success message with the filename
+
+### push_minio_file
+
+Upload a local Excel file to MinIO, then remove the local copy. The uploaded file gets a unique name to differentiate from originals.
+
+```python
+push_minio_file(user_id: str, filename: str) -> str
+```
+
+- `user_id`: User ID for accessing user-specific files.
+- `filename`: Name of the local file to upload.
+- Returns: A dictionary containing a success message with the uploaded filename.
+
+## Workbook Operations
 
 ### create_workbook
-**Tags**: `excel`, `write`, `workbook`, `file`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
 
-Creates a new Excel workbook.
+Create a new Excel workbook.
 
 ```python
 create_workbook(user_id: str, filename: str) -> str
 ```
 
 - `user_id`: User ID for file organization
-- `filename`: Name of the workbook file to create (filename only, not full path)
-- **Returns**: Success message with created filename
-
-**Example Response**: `"Workbook 'report.xlsx' created successfully"`
-
----
+- `filename`: Name of the workbook file to create
+- Returns: Success message with the created filename
 
 ### create_worksheet
-**Tags**: `excel`, `write`, `sheet`, `workbook`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
 
-Creates a new worksheet in an existing workbook.
+Create a new worksheet in an existing workbook.
 
 ```python
 create_worksheet(user_id: str, filename: str, sheet_name: str) -> str
 ```
 
 - `user_id`: User ID for file organization
-- `filename`: Name of the workbook file (filename only)
+- `filename`: Name of the workbook file
 - `sheet_name`: Name for the new worksheet
-- **Returns**: Success message
-
-**Example Response**: `"Worksheet 'Data' created successfully in 'report.xlsx'"`
-
----
+- Returns: Success message with the created sheet name
 
 ### get_workbook_metadata
-**Tags**: `excel`, `read`, `workbook`, `user_scoped`  
-**Access**: excel_analyst, excel_editor, data_scientist, report_generator, admin
 
 Get metadata about workbook including sheets and ranges.
 
@@ -78,23 +78,40 @@ get_workbook_metadata(user_id: str, filename: str, include_ranges: bool = False)
 ```
 
 - `user_id`: User ID for file organization
-- `filename`: Name of the workbook file (filename only)
-- `include_ranges`: Whether to include detailed range information
-- **Returns**: JSON string with workbook metadata
+- `filename`: Name of the workbook file
+- `include_ranges`: Whether to include range information, default to false
+- Returns: JSON string with workbook metadata
 
----
+## Data Operations
 
-## 📝 Data Operations
+### write_data_to_excel
+
+Write data to Excel worksheet.
+
+```python
+write_data_to_excel(
+    user_id: str, 
+    filename: str,
+    sheet_name: str,
+    data: List[List],
+    start_cell: str = "A1"
+) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet to write to
+- `data`: List of lists containing data to write (sublists are rows)
+- `start_cell`: Cell to start writing to, default is "A1"
+- Returns: Success message with filename
 
 ### read_data_from_excel
-**Tags**: `excel`, `read`, `data`, `cell`, `user_scoped`  
-**Access**: excel_analyst, excel_editor, data_scientist, report_generator, admin
 
 Read data from Excel worksheet with cell metadata including validation rules.
 
 ```python
 read_data_from_excel(
-    user_id: str,
+    user_id: str, 
     filename: str,
     sheet_name: str,
     start_cell: str = "A1",
@@ -104,322 +121,160 @@ read_data_from_excel(
 ```
 
 - `user_id`: User ID for file organization
-- `filename`: Name of Excel file (filename only)
+- `filename`: Name of the Excel file
 - `sheet_name`: Name of worksheet
 - `start_cell`: Starting cell (default A1)
 - `end_cell`: Ending cell (optional, auto-expands if not provided)
 - `preview_only`: Whether to return preview only
-- **Returns**: JSON string containing structured cell data with validation metadata
+- Returns: JSON string containing structured cell data with validation metadata. Each cell includes: address, value, row, column, and validation info (if any).
 
-**Example Response**: JSON with cell addresses, values, and validation info
-
----
-
-### write_data_to_excel
-**Tags**: `excel`, `write`, `data`, `cell`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Write data to Excel worksheet.
-
-```python
-write_data_to_excel(
-    user_id: str,
-    filename: str,
-    sheet_name: str,
-    data: List[List],
-    start_cell: str = "A1"
-) -> str
-```
-
-- `user_id`: User ID for file organization
-- `filename`: Name of Excel file (filename only)
-- `sheet_name`: Name of worksheet to write to
-- `data`: List of lists containing data to write (sublists are rows)
-- `start_cell`: Cell to start writing to, default is "A1"
-- **Returns**: Success message with filename
-
-**Example Response**: `"Data written successfully to 'report.xlsx' sheet 'Data'"`
-
----
-
-### apply_formula
-**Tags**: `excel`, `write`, `cell`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Apply Excel formula to cell.
-
-```python
-apply_formula(
-    user_id: str,
-    filename: str,
-    sheet_name: str,
-    cell: str,
-    formula: str
-) -> str
-```
-
-- `user_id`: User ID for file organization
-- `filename`: Name of Excel file (filename only)
-- `sheet_name`: Name of worksheet
-- `cell`: Target cell address (e.g., 'A1')
-- `formula`: Excel formula to apply
-- **Returns**: Success message with filename
-
-**Example Response**: `"Formula applied successfully to cell A1 in 'report.xlsx'"`
-
----
-
-## 📋 Sheet Operations
-
-### copy_worksheet
-**Tags**: `excel`, `write`, `sheet`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Copy a worksheet within the same workbook.
-
-```python
-copy_worksheet(user_id: str, filename: str, source_sheet: str, target_sheet: str) -> str
-```
-
----
-
-### delete_worksheet
-**Tags**: `excel`, `delete`, `sheet`, `user_scoped`  
-**Access**: excel_editor, admin
-
-Delete a worksheet from the workbook.
-
-```python
-delete_worksheet(user_id: str, filename: str, sheet_name: str) -> str
-```
-
----
-
-### rename_worksheet
-**Tags**: `excel`, `write`, `sheet`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Rename a worksheet in the workbook.
-
-```python
-rename_worksheet(user_id: str, filename: str, old_name: str, new_name: str) -> str
-```
-
----
-
-### merge_cells
-**Tags**: `excel`, `write`, `cell`, `user_scoped`  
-**Access**: excel_editor, report_generator, admin
-
-Merge a range of cells in the worksheet.
-
-```python
-merge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str
-
-```
-
-- `range_address`: Range to merge (e.g., 'A1:C3')
-
----
-
-### unmerge_cells
-**Tags**: `excel`, `write`, `cell`, `user_scoped`  
-**Access**: excel_editor, report_generator, admin
-
-Unmerge a range of cells in the worksheet.
-
-```python
-unmerge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str
-```
-
----
-
-### get_merged_cell_ranges
-**Tags**: `excel`, `read`, `cell`, `user_scoped`  
-**Access**: excel_analyst, excel_editor, data_scientist, report_generator, admin
-
-Get all merged cell ranges in the worksheet.
-
-```python
-get_merged_cell_ranges(user_id: str, filename: str, sheet_name: str) -> str
-```
-
-- **Returns**: JSON string with merged ranges information
-
----
-
-### insert_rows
-**Tags**: `excel`, `write`, `sheet`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Insert one or more rows starting at the specified row.
-
-```python
-insert_rows(user_id: str, filename: str, sheet_name: str, start_row: int, count: int = 1) -> str
-```
-
-- `user_id`: User ID for file organization
-- `filename`: Name of the Excel file (filename only)
-- `sheet_name`: Name of the worksheet
-- `start_row`: Row number where insertion begins (1-based)
-- `count`: Number of rows to insert (default: 1)
-- **Returns**: Success message with operation details
-
-**Example Response**: `"Inserted 2 row(s) starting at row 3 in sheet 'Data' of 'report.xlsx'"`
-
----
-
-### insert_columns
-**Tags**: `excel`, `write`, `sheet`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Insert one or more columns starting at the specified column.
-
-```python
-insert_columns(user_id: str, filename: str, sheet_name: str, start_col: int, count: int = 1) -> str
-```
-
-- `user_id`: User ID for file organization
-- `filename`: Name of the Excel file (filename only)
-- `sheet_name`: Name of the worksheet
-- `start_col`: Column number where insertion begins (1-based)
-- `count`: Number of columns to insert (default: 1)
-- **Returns**: Success message with operation details
-
-**Example Response**: `"Inserted 1 column(s) starting at column 2 in sheet 'Data' of 'report.xlsx'"`
-
----
-
-### delete_sheet_rows
-**Tags**: `excel`, `delete`, `sheet`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Delete one or more rows starting at the specified row.
-
-```python
-delete_sheet_rows(user_id: str, filename: str, sheet_name: str, start_row: int, count: int = 1) -> str
-```
-
-- `user_id`: User ID for file organization
-- `filename`: Name of the Excel file (filename only)
-- `sheet_name`: Name of the worksheet
-- `start_row`: Row number where deletion begins (1-based)
-- `count`: Number of rows to delete (default: 1)
-- **Returns**: Success message with operation details
-
-**Example Response**: `"Deleted 3 row(s) starting at row 5 in sheet 'Data' of 'report.xlsx'"`
-
----
-
-### delete_sheet_columns
-**Tags**: `excel`, `delete`, `sheet`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
-
-Delete one or more columns starting at the specified column.
-
-```python
-delete_sheet_columns(user_id: str, filename: str, sheet_name: str, start_col: int, count: int = 1) -> str
-```
-
-- `user_id`: User ID for file organization
-- `filename`: Name of the Excel file (filename only)
-- `sheet_name`: Name of the worksheet
-- `start_col`: Column number where deletion begins (1-based)
-- `count`: Number of columns to delete (default: 1)
-- **Returns**: Success message with operation details
-
-**Example Response**: `"Deleted 2 column(s) starting at column 3 in sheet 'Data' of 'report.xlsx'"`
-
----
-
-## 🎨 Formatting & Validation
+## Formatting Operations
 
 ### format_range
-**Tags**: `excel`, `write`, `format`, `cell`, `user_scoped`  
-**Access**: excel_editor, report_generator, admin
 
 Format a range of cells with various styling options.
 
 ```python
 format_range(
-    user_id: str,
-    filename: str,
+    user_id: str, filename: str,
     sheet_name: str,
-    range_address: str,
-    font_name: Optional[str] = None,
+    start_cell: str,
+    end_cell: Optional[str] = None,
+    bold: bool = False,
+    italic: bool = False,
+    underline: bool = False,
     font_size: Optional[int] = None,
-    bold: Optional[bool] = None,
-    italic: Optional[bool] = None,
     font_color: Optional[str] = None,
-    background_color: Optional[str] = None,
-    border: Optional[str] = None,
+    bg_color: Optional[str] = None,
+    border_style: Optional[str] = None,
+    border_color: Optional[str] = None,
     number_format: Optional[str] = None,
     alignment: Optional[str] = None,
+    wrap_text: bool = False,
+    merge_cells: bool = False,
     protection: Optional[Dict[str, Any]] = None,
     conditional_format: Optional[Dict[str, Any]] = None
 ) -> str
 ```
 
-- `range_address`: Range to format (e.g., 'A1:C10')
-- Supports font properties, colors, borders, number formats, alignment, and conditional formatting
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `start_cell`: Start cell of the range (e.g., 'A1')
+- `end_cell`: End cell of the range (e.g., 'C10'). Defaults to None.
+- `bold`: Whether text should be bold. Defaults to False.
+- `italic`: Whether text should be italic. Defaults to False.
+- `underline`: Whether text should be underlined. Defaults to False.
+- `font_size`: Font size (e.g., 12). Defaults to None.
+- `font_color`: Font color (hex or name). Defaults to None.
+- `bg_color`: Background color (hex or name). Defaults to None.
+- `border_style`: Border style (e.g., 'thin', 'medium', 'thick'). Defaults to None.
+- `border_color`: Border color (hex or name). Defaults to None.
+- `number_format`: Number format string. Defaults to None.
+- `alignment`: Text alignment. Defaults to None.
+- `wrap_text`: Whether text should wrap. Defaults to False.
+- `merge_cells`: Whether to merge cells. Defaults to False.
+- `protection`: Cell protection settings. Defaults to None.
+- `conditional_format`: Conditional formatting rules. Defaults to None.
+- Returns: Success message with filename
 
----
+### merge_cells
 
-### apply_data_validation
-**Tags**: `excel`, `write`, `validation`, `cell`, `user_scoped`  
-**Access**: excel_editor, data_scientist, admin
-
-Apply data validation to a range of cells.
+Merge cells in a specified range.
 
 ```python
-apply_data_validation(
-    user_id: str,
+merge_cells(
+    user_id: str, 
     filename: str,
     sheet_name: str,
-    range_address: str,
-    validation_type: str,
-    formula1: Optional[str] = None,
-    formula2: Optional[str] = None,
-    allow_blank: bool = True,
-    input_title: Optional[str] = None,
-    input_message: Optional[str] = None,
-    error_title: Optional[str] = None,
-    error_message: Optional[str] = None,
-    show_input_message: bool = True,
-    show_error_message: bool = True
+    start_cell: str,
+    end_cell: str
 ) -> str
 ```
 
-- `validation_type`: Type of validation ('list', 'whole', 'decimal', etc.)
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `start_cell`: Start cell of the range (e.g., 'A1')
+- `end_cell`: End cell of the range (e.g., 'C10')
+- Returns: Success message with filename
 
----
+### unmerge_cells
 
-### get_validation_info
-**Tags**: `excel`, `read`, `validation`, `user_scoped`  
-**Access**: excel_analyst, excel_editor, data_scientist, admin
-
-Get validation information for all cells in a worksheet.
+Unmerge cells in a specified range.
 
 ```python
-get_validation_info(user_id: str, filename: str, sheet_name: str) -> str
+unmerge_cells(
+    user_id: str, 
+    filename: str,
+    sheet_name: str,
+    start_cell: str,
+    end_cell: str
+) -> str
 ```
 
-- **Returns**: JSON string with validation information
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `start_cell`: Start cell of the range (e.g., 'A1')
+- `end_cell`: End cell of the range (e.g., 'C10')
+- Returns: Success message with filename
 
----
+### get_merged_cells
 
-## 📊 Advanced Features
+Get all merged cells in a worksheet.
+
+```python
+get_merged_cells(user_id: str, filename: str, sheet_name: str) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- Returns: JSON string containing list of merged cell ranges
+
+
+## Formula Operations
+
+### apply_formula
+
+Apply Excel formula to a specific cell.
+
+```python
+apply_formula(user_id: str, filename: str, sheet_name: str, cell: str, formula: str) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `cell`: Target cell reference (e.g., 'A1')
+- `formula`: Excel formula to apply (e.g., '=SUM(A1:A10)')
+- Returns: Success message with filename
+
+### validate_formula_syntax
+
+Validate Excel formula syntax without applying it to a cell.
+
+```python
+validate_formula_syntax(user_id: str, filename: str, sheet_name: str, cell: str, formula: str) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `cell`: Target cell reference (e.g., 'A1')
+- `formula`: Excel formula to validate (e.g., '=SUM(A1:A10)')
+- Returns: Validation result message
+
+## Chart Operations
 
 ### create_chart
-**Tags**: `excel`, `write`, `chart`, `user_scoped`  
-**Access**: data_scientist, report_generator, admin
 
-Create a chart in the Excel worksheet.
+Create a chart in a worksheet with customizable options.
 
 ```python
 create_chart(
-    user_id: str,
-    filename: str,
+    user_id: str, filename: str,
     sheet_name: str,
     data_range: str,
     chart_type: str,
@@ -427,217 +282,284 @@ create_chart(
     title: str = "",
     x_axis: str = "",
     y_axis: str = ""
-) -> str:
+) -> str
 ```
 
-- `chart_type`: Type of chart ('line', 'bar', 'column', 'pie')
-- `data_range`: Range of data to chart (e.g., 'A1:C10')
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `data_range`: Range containing chart data (e.g., 'A1:B10')
+- `chart_type`: Type of chart (line, bar, pie, scatter, area)
+- `target_cell`: Cell where to place chart (e.g., 'D1')
+- `title`: Optional chart title
+- `x_axis`: Optional X-axis label
+- `y_axis`: Optional Y-axis label
+- Returns: Success message with filename
 
----
+## Pivot Table Operations
 
-### create_pivot_table_tool
-**Tags**: `excel`, `write`, `pivot`, `user_scoped`  
-**Access**: data_scientist, admin
+### create_pivot_table
 
-Create a pivot table from data range.
+Create a pivot table in a worksheet with customizable options.
 
 ```python
-create_pivot_table_tool(
-    user_id: str,
-    filename: str,
+create_pivot_table(
+    user_id: str, filename: str,
     sheet_name: str,
     data_range: str,
+    target_cell: str,
     rows: List[str],
     values: List[str],
     columns: Optional[List[str]] = None,
-    agg_func: str = "sum"
+    agg_func: str = "mean"
 ) -> str
 ```
 
-- `rows`: List of field names for row area
-- `values`: List of field names for values area
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `data_range`: Range containing source data (e.g., 'A1:D50')
+- `target_cell`: Cell where to place pivot table (e.g., 'F1')
+- `rows`: Fields for row labels (e.g., ['Region', 'Product'])
+- `values`: Fields for values (e.g., ['Sales', 'Quantity'])
+- `columns`: Optional fields for column labels (e.g., ['Year'])
 - `agg_func`: Aggregation function (sum, count, average, max, min)
+- Returns: Success message with filename
 
----
+## Table Operations
 
 ### create_table
-**Tags**: `excel`, `write`, `data`, `user_scoped`  
-**Access**: excel_editor, data_scientist, report_generator, admin
 
-Create an Excel table from a data range.
+Creates a native Excel table from a specified range of data with optional styling.
 
 ```python
 create_table(
-    user_id: str,
-    filename: str,
+    user_id: str, filename: str,
     sheet_name: str,
     data_range: str,
-    table_name: str,
-    has_headers: bool = True
+    table_name: Optional[str] = None,
+    table_style: str = "TableStyleMedium9"
 ) -> str
 ```
 
----
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of worksheet
+- `data_range`: The cell range for the table (e.g., "A1:D5")
+- `table_name`: Optional unique name for the table
+- `table_style`: Optional visual style for the table (e.g., "TableStyleLight1")
+- Returns: Success message with filename
 
-## ☁️ MinIO Cloud Storage
+## Worksheet Operations
 
-### list_minio_files
-**Tags**: `minio`, `read`, `storage`, `file`, `user_scoped`  
-**Access**: minio_reader, minio_manager, admin
+### copy_worksheet
 
-List all files in the MinIO bucket for a specific user.
-
-```python
-list_minio_files(user_id: str) -> List[Dict[str, Any]]
-```
-
-- **Returns**: List of file information dictionaries with filename, size, and last_modified
-
-**Example Response**:
-```json
-[
-    {
-        "filename": "report.xlsx",
-        "size": 12345,
-        "last_modified": "2025-01-01T10:00:00"
-    }
-]
-```
-
----
-
-### pull_minio_file
-**Tags**: `minio`, `read`, `storage`, `file`, `user_scoped`  
-**Access**: minio_reader, minio_manager, admin
-
-Download a file from MinIO to the local Excel directory.
+Copy a worksheet within the same workbook.
 
 ```python
-pull_minio_file(user_id: str, filename: str) -> str
+copy_worksheet(user_id: str, filename: str, source_sheet: str, target_sheet: str) -> str
 ```
 
-- `filename`: Name of the file in MinIO (filename only)
-- **Returns**: Success message with filename
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `source_sheet`: Name of sheet to copy
+- `target_sheet`: Name for new sheet
+- Returns: Success message with filename
 
-**Example Response**: `"File 'report.xlsx' downloaded successfully from MinIO"`
+### delete_worksheet
 
----
-
-### push_minio_file
-**Tags**: `minio`, `write`, `storage`, `file`, `user_scoped`  
-**Access**: minio_manager, admin
-
-Upload a local Excel file to MinIO, then remove the local copy.
+Delete a worksheet from a workbook.
 
 ```python
-push_minio_file(user_id: str, filename: str) -> str
+delete_worksheet(user_id: str, filename: str, sheet_name: str) -> str
 ```
 
-- `filename`: Name of the local file to upload (filename only)
-- **Returns**: Success message with uploaded filename
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Name of sheet to delete
+- Returns: Success message with filename
 
-**Note**: The uploaded file gets a "(mod)" suffix to differentiate from originals.
+### rename_worksheet
 
-**Example Response**: `"File uploaded to MinIO as 'report(mod).xlsx'"`
-
----
-
-## 🔧 Agent Management
-
-### list_available_tools_for_agent
-**Tags**: No filtering (system tool)  
-**Access**: All agents
-
-List tools available to a specific agent type.
+Rename a worksheet in a workbook.
 
 ```python
-list_available_tools_for_agent(agent_type: str = None) -> str
+rename_worksheet(user_id: str, filename: str, old_name: str, new_name: str) -> str
 ```
 
-- `agent_type`: Type of agent ('excel_analyst', 'excel_editor', etc.)
-- **Returns**: JSON string with available tools for the agent
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `old_name`: Current sheet name
+- `new_name`: New sheet name
+- Returns: Success message with filename
 
----
+## Range Operations
 
-### get_agent_profiles
-**Tags**: No filtering (system tool)  
-**Access**: All agents
+### copy_range
 
-Get list of available predefined agent profiles.
+Copy a range of cells to another location.
 
 ```python
-get_agent_profiles() -> str
+copy_range(
+    user_id: str, filename: str,
+    sheet_name: str,
+    source_start: str,
+    source_end: str,
+    target_start: str,
+    target_sheet: Optional[str] = None
+) -> str
 ```
 
-- **Returns**: JSON string with available agent profiles and their requirements
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Source worksheet name
+- `source_start`: Starting cell of source range (e.g., 'A1')
+- `source_end`: Ending cell of source range (e.g., 'C10')
+- `target_start`: Starting cell for paste (e.g., 'E1')
+- `target_sheet`: Optional target worksheet name
+- Returns: Success message with filename
 
----
+### delete_range
 
-## 🚨 Important Changes in v2.0
+Delete a range of cells and shift remaining cells accordingly.
 
-### ⚠️ Breaking Changes
-
-1. **Filename Returns**: All tools now return filenames instead of full file paths
-   - **Before**: `"File saved to /excel_files/user_123/report.xlsx"`
-   - **After**: `"File saved to 'report.xlsx'"`
-
-2. **Agent-based Access**: Tools are filtered based on agent type
-   - Specify agent type when connecting: `--agent-type excel_analyst`
-   - Different agents see different subsets of tools
-
-3. **Parameter Names**: Some parameters have been standardized
-   - Use `filename` parameter for file names (not `file_name`)
-   - Parameters always expect filenames, not full paths
-
-### 🔄 Migration Guide
-
-#### For MCP Clients
-1. Handle filename-only returns in tool responses
-2. Specify appropriate agent type for your use case
-3. Update error handling for new response patterns
-
-#### Example Usage
-```bash
-# Start server with specific agent type
-python3 server.py --agent-type excel_analyst
-
-# Excel analyst can only read data
-read_data_from_excel(user_id="123", filename="report.xlsx", sheet_name="Data")
-
-# Excel editor can manipulate files
-create_workbook(user_id="123", filename="new_report.xlsx")
-write_data_to_excel(user_id="123", filename="new_report.xlsx", ...)
+```python
+delete_range(
+    user_id: str, filename: str,
+    sheet_name: str,
+    start_cell: str,
+    end_cell: str,
+    shift_direction: str = "up"
+) -> str
 ```
 
----
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Target worksheet name
+- `start_cell`: Starting cell of range (e.g., 'A1')
+- `end_cell`: Ending cell of range (e.g., 'C10')
+- `shift_direction`: Direction to shift cells ("up" or "left")
+- Returns: Success message with filename
 
-## 📊 Tool Access Matrix
+### validate_excel_range
 
-| Tool Category | excel_analyst | excel_editor | minio_reader | minio_manager | data_scientist | report_generator | admin |
-|---------------|---------------|--------------|--------------|---------------|----------------|------------------|-------|
-| **Read Data** | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Write Data** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Workbook Ops** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Sheet Ops** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Formatting** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Charts** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Pivot Tables** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **MinIO List** | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **MinIO Read** | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **MinIO Write** | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Row/Col Insert** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Row/Col Delete** | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+Validate if a range exists and is properly formatted in a worksheet.
 
----
+```python
+validate_excel_range(
+    user_id: str, filename: str,
+    sheet_name: str,
+    start_cell: str,
+    end_cell: Optional[str] = None
+) -> str
+```
 
-## 🛡️ Security Features
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Target worksheet name
+- `start_cell`: Starting cell of range (e.g., 'A1')
+- `end_cell`: Optional ending cell of range (e.g., 'C10')
+- Returns: Validation result message
 
-- **File Locking**: Automatic protection against concurrent access
-- **User Isolation**: Each user has their own file directory
-- **Path Sanitization**: Prevents directory traversal attacks
-- **Agent Permissions**: Tools filtered based on agent capabilities
-- **Safe Returns**: Only filenames returned, never full paths
+### get_data_validation_info
 
----
+Get data validation rules and metadata for a worksheet.
 
-For more information about the server architecture and setup, see [README.md](README.md) and [CHANGELOG.md](CHANGELOG.md).
+```python
+get_data_validation_info(user_id: str, filename: str, sheet_name: str) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Target worksheet name
+- Returns: JSON string containing all data validation rules with metadata including:
+  - Validation type (list, whole, decimal, date, time, textLength)
+  - Operator (between, notBetween, equal, greaterThan, lessThan, etc.)
+  - Allowed values for list validations (resolved from ranges)
+  - Formula constraints for numeric/date validations
+  - Cell ranges where validation applies
+  - Prompt and error messages
+
+**Note**: The `read_data_from_excel` tool automatically includes validation metadata for individual cells when available.
+
+## Row and Column Operations
+
+### insert_rows
+
+Insert one or more rows starting at the specified row.
+
+```python
+insert_rows(
+    user_id: str, filename: str,
+    sheet_name: str,
+    start_row: int,
+    count: int = 1
+) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Target worksheet name
+- `start_row`: Row number where to start inserting (1-based)
+- `count`: Number of rows to insert (default: 1)
+- Returns: Success message with filename
+
+### insert_columns
+
+Insert one or more columns starting at the specified column.
+
+```python
+insert_columns(
+    user_id: str, filename: str,
+    sheet_name: str,
+    start_col: int,
+    count: int = 1
+) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Target worksheet name
+- `start_col`: Column number where to start inserting (1-based)
+- `count`: Number of columns to insert (default: 1)
+- Returns: Success message with filename
+
+### delete_sheet_rows
+
+Delete one or more rows starting at the specified row.
+
+```python
+delete_sheet_rows(
+    user_id: str, filename: str,
+    sheet_name: str,
+    start_row: int,
+    count: int = 1
+) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Target worksheet name
+- `start_row`: Row number where to start deleting (1-based)
+- `count`: Number of rows to delete (default: 1)
+- Returns: Success message with filename
+
+### delete_sheet_columns
+
+Delete one or more columns starting at the specified column.
+
+```python
+delete_sheet_columns(
+    user_id: str, filename: str,
+    sheet_name: str,
+    start_col: int,
+    count: int = 1
+) -> str
+```
+
+- `user_id`: User ID for file organization
+- `filename`: Name of the Excel file
+- `sheet_name`: Target worksheet name
+- `start_col`: Column number where to start deleting (1-based)
+- `count`: Number of columns to delete (default: 1)
+- Returns: Success message with filename

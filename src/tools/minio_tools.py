@@ -3,10 +3,10 @@ MinIO storage tools for Excel MCP server.
 """
 
 import logging
+import json
 from typing import List, Dict, Any
 from minio import Minio
 from minio.error import S3Error
-from ..core.tag_system import ToolTags
 from ..core.file_manager import get_safe_filename
 from ..utils.exceptions import DataError
 from fastmcp.exceptions import ToolError
@@ -16,11 +16,16 @@ logger = logging.getLogger("excel-mcp")
 
 def _get_minio_client(config):
     """Helper function to create MinIO client."""
+    # Respect scheme and explicit secure flag from config
+    endpoint = (
+        config.minio.endpoint.replace("http://", "").replace("https://", "")
+        if isinstance(config.minio.endpoint, str) else config.minio.endpoint
+    )
     return Minio(
-        config.minio.endpoint.replace("http://", "").replace("https://", ""),
+        endpoint,
         access_key=config.minio.access_key,
         secret_key=config.minio.secret_key,
-        secure=False,
+        secure=bool(getattr(config.minio, "secure", False)),
     )
 
 
@@ -64,23 +69,19 @@ def _get_unique_filename(client, bucket_name, user_id, base_filename):
 def register_minio_tools(mcp_server):
     """Register all MinIO-related tools with the MCP server."""
     
-    @mcp_server.tool(
-        tags=ToolTags(
-            functional_domains=["minio"],
-            permissions=["read"],
-            resource_types=["storage", "file"],
-            scopes=["user_scoped"]
-        )
-    )
-    def list_minio_files(user_id: str) -> List[Dict[str, Any]]:
+    @mcp_server.tool(tags={"minio", "read"})
+    def list_minio_files(user_id: str) -> str:
         """
         List all files in the MinIO bucket for a specific user.
         
         Args:
-            user_id: User ID for accessing user-specific files
+            user_id (str): User ID for accessing user-specific files. This parameter is required.
             
         Returns:
-            List of file information dictionaries with name, size, and last_modified
+            str: JSON string of file info objects. Each object contains:
+            - filename (str)
+            - size (int)
+            - last_modified (str | null)
         """
         try:
             client = _get_minio_client(mcp_server.config)
@@ -100,7 +101,7 @@ def register_minio_tools(mcp_server):
                 }
                 file_list.append(file_info)
                 logger.info(f"Found file: {filename} for user {user_id}")
-            return {"files": file_list}
+            return json.dumps(file_list, indent=2, default=str)
         except S3Error as e:
             logger.error(f"Error listing MinIO files: {e}")
             raise ToolError("Failed to list files from storage.")
@@ -108,24 +109,17 @@ def register_minio_tools(mcp_server):
             logger.error(f"Unexpected error listing MinIO files: {e}")
             raise ToolError("An unexpected error occurred while listing files.")
 
-    @mcp_server.tool(
-        tags=ToolTags(
-            functional_domains=["minio"],
-            permissions=["read"],
-            resource_types=["storage", "file"],
-            scopes=["user_scoped"]
-        )
-    )
+    @mcp_server.tool(tags={"minio", "read"})
     def pull_minio_file(user_id: str, filename: str) -> str:
         """
         Download a file from MinIO to the local Excel directory.
 
         Args:
-            user_id: User ID for accessing user-specific files
-            filename: Name of the file in MinIO
+            user_id (str): User ID for accessing user-specific files. This parameter is required.
+            filename (str): Name of the file in MinIO. This parameter is required.
             
         Returns:
-            Success message with filename (not full path)
+            str: Success message with the filename (not full path).
         """
         try:
             safe_filename = get_safe_filename(filename)
@@ -144,7 +138,7 @@ def register_minio_tools(mcp_server):
                 client.fget_object(bucket_name, object_name, str(local_file_path))
                 logger.info(f"Successfully pulled file {safe_filename} from MinIO for user {user_id}")
                 
-                return {"message": f"File '{safe_filename}' downloaded successfully from MinIO"}
+                return f"File '{safe_filename}' downloaded successfully from MinIO"
                 
         except S3Error as e:
             logger.error(f"Error pulling file from MinIO: {e}")
@@ -153,25 +147,18 @@ def register_minio_tools(mcp_server):
             logger.error(f"Unexpected error pulling file: {e}")
             raise ToolError("An unexpected error occurred while downloading the file.")
 
-    @mcp_server.tool(
-        tags=ToolTags(
-            functional_domains=["minio"],
-            permissions=["write"],
-            resource_types=["storage", "file"],
-            scopes=["user_scoped"]
-        )
-    )
+    @mcp_server.tool(tags={"minio", "write"})
     def push_minio_file(user_id: str, filename: str) -> str:
         """
         Upload a local Excel file to MinIO, then remove the local copy.
-        The uploaded file gets a "(mod)" suffix to differentiate from originals.
+        The uploaded file gets a unique name to differentiate from originals.
 
         Args:
-            user_id: User ID for accessing user-specific files
-            filename: Name of the local file to upload
+            user_id (str): User ID for accessing user-specific files. This parameter is required.
+            filename (str): Name of the local file to upload. This parameter is required.
             
         Returns:
-            Success message with the uploaded filename
+            str: Success message with the uploaded filename.
         """
         try:
             safe_filename = get_safe_filename(filename)
@@ -193,13 +180,13 @@ def register_minio_tools(mcp_server):
                 try:
                     # Upload the file to MinIO
                     client.fput_object(bucket_name, object_name, str(local_file_path))
-                    logger.info(f"Successfully pushed file {safe_filename} to MinIO as {modified_filename}")
+                    logger.info(f"Successfully pushed file {safe_filename} to MinIO as {unique_filename}")
                     
                     # Remove the local file after successful upload
                     local_file_path.unlink()
                     logger.info(f"Removed local file: {safe_filename}")
                     
-                    return {"message": f"File uploaded to MinIO as '{unique_filename}'"}
+                    return f"File uploaded to MinIO as '{unique_filename}', local copy {safe_filename} has been removed"
                     
                 except S3Error as e:
                     logger.error(f"Error pushing file to MinIO: {e}")

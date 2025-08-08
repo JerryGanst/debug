@@ -9,3 +9,4 @@ MINIO_CONFIG:
   MINIO_ACCESS_KEY: minioadmin
   MINIO_SECRET_KEY: G3j+-G]aMX%bc/Wt
   MINIO_BUCKET: ai-file
+  MINIO_SECURE: false

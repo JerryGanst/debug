@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Compatibility run script for Excel MCP Server 2.0
+Main FastMCP 2.0 Excel Server Entry Point.
 """
 
-from src.server import main
+from src.core.mcp_server import main
 
 if __name__ == "__main__":
     main()

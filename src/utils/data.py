@@ -15,11 +15,14 @@ logger = logging.getLogger(__name__)
 def read_excel_range(
     filepath: Path | str,
     sheet_name: str,
-    start_cell: str = "A1",
-    end_cell: Optional[str] = None,
+    start_cell: str,
+    end_cell: str,
     preview_only: bool = False
-) -> List[Dict[str, Any]]:
-    """Read data from Excel range with optional preview mode"""
+) -> List[List[Any]]:
+    """Read data from an Excel range and return a list of row lists.
+
+    Each inner list represents a row of cell values.
+    """
     try:
         wb = load_workbook(filepath, read_only=False)
         
@@ -28,10 +31,6 @@ def read_excel_range(
             
         ws = wb[sheet_name]
 
-        # Parse start cell
-        if ':' in start_cell:
-            start_cell, end_cell = start_cell.split(':')
-            
         # Get start coordinates
         try:
             start_coords = parse_cell_range(start_cell)
@@ -41,24 +40,14 @@ def read_excel_range(
         except ValueError as e:
             raise DataError(f"Invalid start cell format: {str(e)}")
 
-        # Determine end coordinates
-        if end_cell:
-            try:
-                end_coords = parse_cell_range(end_cell)
-                if not end_coords or not all(coord is not None for coord in end_coords[:2]):
-                    raise DataError(f"Invalid end cell reference: {end_cell}")
-                end_row, end_col = end_coords[0], end_coords[1]
-            except ValueError as e:
-                raise DataError(f"Invalid end cell format: {str(e)}")
-        else:
-            # If no end_cell, use the full data range of the sheet
-            if ws.max_row == 1 and ws.max_column == 1 and ws.cell(1, 1).value is None:
-                # Handle empty sheet
-                end_row, end_col = start_row, start_col
-            else:
-                # Use the sheet's own boundaries
-                start_row, start_col = ws.min_row, ws.min_column
-                end_row, end_col = ws.max_row, ws.max_column
+        # Determine end coordinates (required)
+        try:
+            end_coords = parse_cell_range(end_cell)
+            if not end_coords or not all(coord is not None for coord in end_coords[:2]):
+                raise DataError(f"Invalid end cell reference: {end_cell}")
+            end_row, end_col = end_coords[0], end_coords[1]
+        except ValueError as e:
+            raise DataError(f"Invalid end cell format: {str(e)}")
 
         # Validate range bounds
         if start_row > ws.max_row or start_col > ws.max_column:
@@ -170,8 +159,8 @@ def _write_data_to_worksheet(
 def read_excel_range_with_metadata(
     filepath: Path | str,
     sheet_name: str,
-    start_cell: str = "A1",
-    end_cell: Optional[str] = None,
+    start_cell: str,
+    end_cell: str,
     include_validation: bool = True
 ) -> Dict[str, Any]:
     """Read data from Excel range with cell metadata including validation rules.
@@ -194,10 +183,6 @@ def read_excel_range_with_metadata(
             
         ws = wb[sheet_name]
 
-        # Parse start cell
-        if ':' in start_cell:
-            start_cell, end_cell = start_cell.split(':')
-            
         # Get start coordinates
         try:
             start_coords = parse_cell_range(start_cell)
@@ -207,26 +192,14 @@ def read_excel_range_with_metadata(
         except ValueError as e:
             raise DataError(f"Invalid start cell format: {str(e)}")
 
-        # Determine end coordinates
-        if end_cell:
-            try:
-                end_coords = parse_cell_range(end_cell)
-                if not end_coords or not all(coord is not None for coord in end_coords[:2]):
-                    raise DataError(f"Invalid end cell reference: {end_cell}")
-                end_row, end_col = end_coords[0], end_coords[1]
-            except ValueError as e:
-                raise DataError(f"Invalid end cell format: {str(e)}")
-        else:
-            # If no end_cell, use the full data range of the sheet
-            if ws.max_row == 1 and ws.max_column == 1 and ws.cell(1, 1).value is None:
-                # Handle empty sheet
-                end_row, end_col = start_row, start_col
-            else:
-                # Use the sheet's own boundaries, but respect the provided start_cell
-                end_row, end_col = ws.max_row, ws.max_column
-                # If start_cell is 'A1' (default), we should find the true start
-                if start_cell == 'A1':
-                    start_row, start_col = ws.min_row, ws.min_column
+        # Determine end coordinates (required)
+        try:
+            end_coords = parse_cell_range(end_cell)
+            if not end_coords or not all(coord is not None for coord in end_coords[:2]):
+                raise DataError(f"Invalid end cell reference: {end_cell}")
+            end_row, end_col = end_coords[0], end_coords[1]
+        except ValueError as e:
+            raise DataError(f"Invalid end cell format: {str(e)}")
 
         # Validate range bounds
         if start_row > ws.max_row or start_col > ws.max_column:

@@ -25,6 +25,7 @@ class MinIOConfig:
     access_key: str
     secret_key: str
     bucket: str
+    secure: bool = False
 
 
 @dataclass
@@ -63,11 +64,18 @@ def load_config(config_path: str = None) -> ServerConfig:
     
     # Parse MinIO config
     minio_data = config_data.get('MINIO_CONFIG', {})
+    endpoint_value = minio_data['MINIO_ENDPOINT']
+    # Allow explicit flag; otherwise infer from endpoint scheme
+    secure_flag = minio_data.get('MINIO_SECURE')
+    if secure_flag is None:
+        secure_flag = str(endpoint_value).startswith("https://")
+
     minio_config = MinIOConfig(
-        endpoint=minio_data['MINIO_ENDPOINT'],
+        endpoint=endpoint_value,
         access_key=minio_data['MINIO_ACCESS_KEY'],
         secret_key=minio_data['MINIO_SECRET_KEY'],
-        bucket=minio_data['MINIO_BUCKET']
+        bucket=minio_data['MINIO_BUCKET'],
+        secure=bool(secure_flag)
     )
     
     return ServerConfig(mcp=mcp_config, minio=minio_config)
