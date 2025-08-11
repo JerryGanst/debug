@@ -68,6 +68,7 @@ def create_pivot_table(
 
         # Read source data and convert to list of dicts
         try:
+            # Call read_excel_range with separate start_cell and end_cell parameters
             data_as_list = read_excel_range(filepath, sheet_name, start_cell, end_cell)
             if not data_as_list or len(data_as_list) < 2:
                 raise PivotError("Source data must have a header row and at least one data row.")

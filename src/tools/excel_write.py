@@ -1,6 +1,6 @@
 import logging
 from typing import Optional, List, Dict, Any
-from ..core.file_manager import get_safe_filename
+from ..core.file_manager import get_safe_file_name
 from ..utils.chart import create_chart_in_sheet as create_chart_impl
 from ..utils.pivot import create_pivot_table as create_pivot_table_impl
 from ..utils.tables import create_excel_table as create_table_impl
@@ -41,7 +41,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def create_chart(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         data_range: str,
         chart_type: str,
@@ -55,7 +55,7 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Name of worksheet
             data_range (str): Range of data to chart (e.g., 'A1:C10')
             chart_type (str): Type of chart (e.g., 'line', 'bar', 'column', 'pie')
@@ -65,10 +65,10 @@ def register_excel_write_tools(mcp_server):
             y_axis (str, optional): Y-axis title. Defaults to "".
             
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = create_chart_impl(
@@ -81,10 +81,10 @@ def register_excel_write_tools(mcp_server):
                     x_axis=x_axis,
                     y_axis=y_axis
                 )
-                safe_result = result["message"].replace(str(file_path), safe_filename)
+                safe_result = result["message"].replace(str(file_path), safe_file_name)
                 return safe_result
         except (ValidationError, ChartError) as e:
-            safe_error = str(e).replace(str(file_path), safe_filename)
+            safe_error = str(e).replace(str(file_path), safe_file_name)
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating chart: {e}")
@@ -93,7 +93,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def create_pivot_table(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         data_range: str,
         rows: List[str],
@@ -106,7 +106,7 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Source worksheet name
             data_range (str): Data range for pivot table (e.g., 'A1:D100')
             rows (List[str]): List of field names for row area
@@ -115,10 +115,10 @@ def register_excel_write_tools(mcp_server):
             agg_func (str, optional): Aggregation function (sum, count, average, max, min). Defaults to "sum".
             
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = create_pivot_table_impl(
@@ -130,10 +130,10 @@ def register_excel_write_tools(mcp_server):
                     columns=columns or [],
                     agg_func=agg_func
                 )
-                safe_result = result["message"].replace(str(file_path), safe_filename)
+                safe_result = result["message"].replace(str(file_path), safe_file_name)
                 return safe_result
-        except PivotError as e:
-            safe_error = str(e).replace(str(file_path), safe_filename)
+        except (PivotError, ValidationError) as e:
+            safe_error = str(e).replace(str(file_path), safe_file_name)
             return f"Pivot Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating pivot table: {e}")
@@ -142,7 +142,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def create_table(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         data_range: str,
         table_name: Optional[str] = None,
@@ -153,17 +153,17 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Name of worksheet
             data_range (str): Range to convert to table (e.g., 'A1:D10')
             table_name (Optional[str], optional): Name for the table. Defaults to None.
             table_style (str, optional): Table's style. Defaults to "TableStyleMedium9".
             
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = create_table_impl(
@@ -173,10 +173,10 @@ def register_excel_write_tools(mcp_server):
                     table_name=table_name,
                     table_style=table_style
                 )
-                safe_result = result["message"].replace(str(file_path), safe_filename)
+                safe_result = result["message"].replace(str(file_path), safe_file_name)
                 return safe_result
         except DataError as e:
-            safe_error = str(e).replace(str(file_path), safe_filename)
+            safe_error = str(e).replace(str(file_path), safe_file_name)
             return f"Data Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating table: {e}")
@@ -186,7 +186,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def write_data_to_excel(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         data: List[List],
         start_cell: str = "A1",
@@ -196,23 +196,23 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet to write to
             data: List of lists containing data to write (sublists are rows)
             start_cell: Cell to start writing to, default is "A1"
         
         Returns:
-            Success message with filename
+            Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = write_data(str(file_path), sheet_name, data, start_cell)
-                safe_result = result["message"].replace(str(file_path), safe_filename)
+                safe_result = result["message"].replace(str(file_path), safe_file_name)
                 return safe_result
         except (ValidationError, DataError) as e:
-            safe_error = str(e).replace(str(file_path), safe_filename)
+            safe_error = str(e).replace(str(file_path), safe_file_name)
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error writing data: {e}")
@@ -221,7 +221,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def apply_formula(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         cell: str,
         formula: str,
@@ -231,28 +231,28 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet
             cell: Target cell address (e.g., 'A1')
             formula: Excel formula to apply
             
         Returns:
-            Success message with filename
+            Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 validation = validate_formula_impl(str(file_path), sheet_name, cell, formula)
                 if isinstance(validation, dict) and "error" in validation:
-                    safe_error = validation["error"].replace(str(file_path), safe_filename)
+                    safe_error = validation["error"].replace(str(file_path), safe_file_name)
                     return f"Error: {safe_error}"
                 # then apply the formula
                 result = apply_formula_impl(str(file_path), sheet_name, cell, formula)
-                safe_result = result["message"].replace(str(file_path), safe_filename)
+                safe_result = result["message"].replace(str(file_path), safe_file_name)
                 return safe_result
         except (ValidationError, CalculationError) as e:
-            safe_error = str(e).replace(str(file_path), safe_filename)
+            safe_error = str(e).replace(str(file_path), safe_file_name)
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error applying formula: {e}")
@@ -263,7 +263,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def format_range(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         start_cell: str,
         end_cell: Optional[str] = None,
@@ -287,7 +287,7 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Name of worksheet
             start_cell (str): Start cell of the range (e.g., 'A1')
             end_cell (Optional[str], optional): End cell of the range (e.g., 'C10'). Defaults to None.
@@ -307,10 +307,10 @@ def register_excel_write_tools(mcp_server):
             conditional_format (Optional[Dict[str, Any]], optional): Conditional formatting rules. Defaults to None.
             
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = format_range_func(
@@ -333,10 +333,10 @@ def register_excel_write_tools(mcp_server):
                     protection=protection,  # This can be None
                     conditional_format=conditional_format  # This can be None
                 )
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, FormattingError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error formatting range: {e}")
@@ -345,7 +345,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def copy_range(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         source_start: str,
         source_end: str,
@@ -357,7 +357,7 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Name of worksheet
             source_start (str): Starting cell of source range (e.g., "A1")
             source_end (str): Ending cell of source range (e.g., "C3")
@@ -366,24 +366,24 @@ def register_excel_write_tools(mcp_server):
                 If not provided, uses the source sheet. Defaults to None.
                 
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = copy_range_operation(
-                    full_path = str(file_path),
+                    filepath = str(file_path),
                     sheet_name = sheet_name,
                     source_start = source_start,
                     source_end = source_end,
                     target_start = target_start,
                     target_sheet = target_sheet or sheet_name  # Use source sheet if target_sheet is None
                 )
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error copying range: {e}")
@@ -392,7 +392,7 @@ def register_excel_write_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "write"})
     def delete_range(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         start_cell: str,
         end_cell: str,
@@ -403,7 +403,7 @@ def register_excel_write_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Name of worksheet
             start_cell (str): Starting cell of range to delete (e.g., "A1")
             end_cell (str): Ending cell of range to delete (e.g., "C3")
@@ -411,10 +411,10 @@ def register_excel_write_tools(mcp_server):
                 Valid values are "up", "left", "none". Defaults to "up".
                 
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = delete_range_operation(
@@ -424,10 +424,10 @@ def register_excel_write_tools(mcp_server):
                     end_cell=end_cell,
                     shift_direction=shift_direction
                 )
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error deleting range: {e}")
@@ -435,152 +435,152 @@ def register_excel_write_tools(mcp_server):
         
     # Sheet related tools
     @mcp_server.tool(tags={"excel", "write"})
-    def copy_worksheet(user_id: str, filename: str, source_sheet: str, target_sheet: str) -> str:
+    def copy_worksheet(user_id: str, file_name: str, source_sheet: str, target_sheet: str) -> str:
         """
         Copy a worksheet within the same workbook.
         
         Args:
             user_id (str): User ID for file organization. This parameter is required.
-            filename (str): Name of the Excel file. This parameter is required.
+            file_name (str): Name of the Excel file. This parameter is required.
             source_sheet (str): Name of source worksheet to copy. This parameter is required.
             target_sheet (str): Name for the new copied worksheet. This parameter is required.
             
         Returns:
-            str: Success message with filename.
+            str: Success message with file_name.
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = copy_sheet(str(file_path), source_sheet, target_sheet)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error copying worksheet: {e}")
             raise
         
     @mcp_server.tool(tags={"excel", "write"})
-    def delete_worksheet(user_id: str, filename: str, sheet_name: str) -> str:
+    def delete_worksheet(user_id: str, file_name: str, sheet_name: str) -> str:
         """
         Delete a worksheet from the workbook.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet to delete
             
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = delete_sheet(str(file_path), sheet_name)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error deleting worksheet: {e}")
             raise
 
     @mcp_server.tool(tags={"excel", "write"})
-    def rename_worksheet(user_id: str, filename: str, old_name: str, new_name: str) -> str:
+    def rename_worksheet(user_id: str, file_name: str, old_name: str, new_name: str) -> str:
         """
         Rename a worksheet in the workbook.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             old_name: Current name of worksheet
             new_name: New name for worksheet
             
         Returns:
-            Success message with filename
+            Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = rename_sheet(str(file_path), old_name, new_name)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error renaming worksheet: {e}")
             raise
         
     @mcp_server.tool(tags={"excel", "write"})
-    def merge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str:
+    def merge_cells(user_id: str, file_name: str, sheet_name: str, start_cell: str, end_cell: str) -> str:
         """
         Merge a range of cells in the worksheet.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet
             range_address: Range to merge (e.g., 'A1:C3')
             
         Returns:
-            Success message with filename
+            Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = merge_range(str(file_path), sheet_name, start_cell, end_cell)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error merging cells: {e}")
             raise
         
     @mcp_server.tool(tags={"excel", "write"})
-    def unmerge_cells(user_id: str, filename: str, sheet_name: str, start_cell: str, end_cell: str) -> str:
+    def unmerge_cells(user_id: str, file_name: str, sheet_name: str, start_cell: str, end_cell: str) -> str:
         """
         Unmerge a range of cells in the worksheet.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet
             range_address: Range to unmerge (e.g., 'A1:C3')
             
         Returns:
-            Success message with filename
+            Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = unmerge_range(str(file_path), sheet_name, start_cell, end_cell)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error unmerging cells: {e}")
             raise
 
     @mcp_server.tool(tags={"excel", "write"})
-    def insert_rows(user_id: str, filename: str, sheet_name: str, start_row: int, count: int = 1) -> str:
+    def insert_rows(user_id: str, file_name: str, sheet_name: str, start_row: int, count: int = 1) -> str:
         """
         Insert one or more rows starting at the specified row.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of the worksheet
             start_row: Row number where insertion begins (1-based)
             count: Number of rows to insert (default: 1)
@@ -588,28 +588,28 @@ def register_excel_write_tools(mcp_server):
         Returns:
             Success message with operation details
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = insert_row(str(file_path), sheet_name, start_row, count)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error inserting rows: {e}") 
             raise
 
     @mcp_server.tool(tags={"excel", "write"})
-    def insert_columns(user_id: str, filename: str, sheet_name: str, start_col: int, count: int = 1) -> str:
+    def insert_columns(user_id: str, file_name: str, sheet_name: str, start_col: int, count: int = 1) -> str:
         """
         Insert one or more columns starting at the specified column.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of the worksheet
             start_col: Column number where insertion begins (1-based)
             count: Number of columns to insert (default: 1)
@@ -617,28 +617,28 @@ def register_excel_write_tools(mcp_server):
         Returns:
             Success message with operation details
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = insert_cols(str(file_path), sheet_name, start_col, count)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error inserting columns: {e}") 
             raise
 
     @mcp_server.tool(tags={"excel", "write"})
-    def delete_sheet_rows(user_id: str, filename: str, sheet_name: str, start_row: int, count: int = 1) -> str:
+    def delete_sheet_rows(user_id: str, file_name: str, sheet_name: str, start_row: int, count: int = 1) -> str:
         """
         Delete one or more rows starting at the specified row.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of the worksheet
             start_row: Row number where deletion begins (1-based)
             count: Number of rows to delete (default: 1)
@@ -646,28 +646,28 @@ def register_excel_write_tools(mcp_server):
         Returns:
             Success message with operation details
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = delete_rows(str(file_path), sheet_name, start_row, count)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error deleting rows: {e}") 
             raise
         
     @mcp_server.tool(tags={"excel", "write"})
-    def delete_sheet_columns(user_id: str, filename: str, sheet_name: str, start_col: int, count: int = 1) -> str:
+    def delete_sheet_columns(user_id: str, file_name: str, sheet_name: str, start_col: int, count: int = 1) -> str:
         """
         Delete one or more columns starting at the specified column.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of the worksheet
             start_col: Column number where deletion begins (1-based)
             count: Number of columns to delete (default: 1)
@@ -675,15 +675,15 @@ def register_excel_write_tools(mcp_server):
         Returns:
             Success message with operation details
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = delete_cols(str(file_path), sheet_name, start_col, count)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error deleting columns: {e}")
@@ -691,55 +691,55 @@ def register_excel_write_tools(mcp_server):
         
     # Workbook related tools
     @mcp_server.tool(tags={"excel", "write"})
-    def create_workbook(user_id: str, filename: str) -> str:
+    def create_workbook(user_id: str, file_name: str) -> str:
         """
         Create a new Excel workbook.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the workbook file to create
+            file_name: Name of the workbook file to create
         Returns:
-            Success message with the created filename
+            Success message with the created file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 # Create new workbook
                 result = create_workbook_impl(str(file_path))
-                logger.info(f"Created workbook: {safe_filename} for user {user_id}")
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                logger.info(f"Created workbook: {safe_file_name} for user {user_id}")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except WorkbookError as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating workbook: {e}")
             raise
 
     @mcp_server.tool(tags={"excel", "write"})
-    def create_worksheet(user_id: str, filename: str, sheet_name: str) -> str:
+    def create_worksheet(user_id: str, file_name: str, sheet_name: str) -> str:
         """
         Create a new worksheet in an existing workbook.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the workbook file
+            file_name: Name of the workbook file
             sheet_name: Name for the new worksheet
             
         Returns:
             Success message with the created sheet name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                     result = create_sheet(str(file_path), sheet_name)
-                    logger.info(f"Created worksheet '{sheet_name}' in {safe_filename} for user {user_id}")
+                    logger.info(f"Created worksheet '{sheet_name}' in {safe_file_name} for user {user_id}")
                     safe_result = result["message"].replace(sheet_name, f"'{sheet_name}'")
                     return safe_result
         except (ValidationError, WorkbookError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error creating worksheet: {e}")

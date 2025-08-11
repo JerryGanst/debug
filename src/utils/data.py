@@ -169,7 +169,7 @@ def read_excel_range_with_metadata(
         filepath: Path to Excel file
         sheet_name: Name of worksheet
         start_cell: Starting cell address
-        end_cell: Ending cell address (optional)
+        end_cell: Ending cell address
         include_validation: Whether to include validation metadata
         
     Returns:

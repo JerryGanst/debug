@@ -37,20 +37,20 @@ class FileManager:
         user_dir.mkdir(parents=True, exist_ok=True)
         return user_dir
     
-    def get_file_path(self, filename: str, user_id: str) -> Path:
+    def get_file_path(self, file_name: str, user_id: str) -> Path:
         """
         Get the full path for a user's file.
         
         Args:
-            filename: Name of the file (without path)
+            file_name: Name of the file (without path)
             user_id: User identifier
             
         Returns:
             Full path to the file
         """
-        # Extract just the filename from any path input to avoid confusion
-        filename = Path(filename).name
-        return self.get_user_directory(user_id) / filename
+        # Extract just the file_name from any path input to avoid confusion
+        file_name = Path(file_name).name
+        return self.get_user_directory(user_id) / file_name
     
     @contextmanager
     def lock_file(self, file_path: Union[str, Path], timeout: float = 30.0):
@@ -66,22 +66,25 @@ class FileManager:
         """
         lock_path = Path(str(file_path) + '.lock')
         lock = filelock.FileLock(lock_path, timeout=timeout)
+        lock_acquired = False
 
         try:
             lock.acquire()
+            lock_acquired = True
             yield file_path
         finally:
-            lock.release()
+            if lock_acquired:
+                lock.release()
 
 
-def get_safe_filename(filename: str) -> str:
+def get_safe_file_name(file_name: str) -> str:
     """
-    Extract safe filename from path and ensure it's just a filename.
+    Extract safe file_name from path and ensure it's just a file_name.
     
     Args:
-        filename: Input filename or path
+        file_name: Input file_name or path
         
     Returns:
-        Safe filename without path components
+        Safe file_name without path components
     """
-    return Path(filename).name
+    return Path(file_name).name
