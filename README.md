@@ -185,7 +185,7 @@ python -m pytest --cov=src
 - **User Isolation**: Files are segregated by user ID
 - **Path Sanitization**: Prevents directory traversal attacks
 - **File Locking**: Prevents concurrent access conflicts
-- **Safe file_names**: Automatic file_name sanitization
+- **Safe filenames**: Automatic filename sanitization
 
 ## Error Handling
 

@@ -70,7 +70,7 @@ def get_workbook_info(filepath: str, include_ranges: bool = False) -> Dict[str, 
         wb = load_workbook(filepath, read_only=False)
         
         info = {
-            "file_name": path.name,
+            "filename": path.name,
             "sheets": wb.sheetnames,
             "size": path.stat().st_size,
             "modified": path.stat().st_mtime
