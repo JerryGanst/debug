@@ -1,27 +1,23 @@
-#torch~=2.5.1+cu121
-uvicorn~=0.34.0
-fastapi~=0.115.8
-pydantic~=2.10.6
-pydantic-settings~=2.8.0
-huggingface-hub~=0.29.0
-pymongo~=4.11.1
-requests~=2.32.3
-PyYAML~=6.0.2
-DBUtils~=3.1.0
-openai~=1.91.0
-PyPDF2~=3.0.1
-langdetect~=1.0.9
-transformers~=4.49.0
-sentence-transformers~=3.4.1
-pycryptodome~=3.21.0
-python-docx~=1.1.2
-python-pptx~=1.0.2
-#vllm~=0.7.3
-pytest~=8.3.5
-RapidFuzz~=3.13.0
-langchain~=0.3.25
-langchain-community~=0.3.24
-langchain-text-splitters~=0.3.8
-minio~=7.2.15
-langchain-openai~=0.3.25
-chromadb~=0.6.3
+# Python version requirement
+# Requires Python 3.10+
+
+# Core MCP framework (using FastMCP 2.0)
+fastmcp>=2.0.0,<3.0.0
+
+# Excel manipulation library
+openpyxl>=3.1.5
+
+# MinIO client for cloud storage
+minio>=7.1.0
+
+# Configuration file parsing
+PyYAML>=6.0
+
+# Cross-platform file locking
+filelock>=3.9.0
+
+# Optional: Development and testing dependencies (uncomment if needed)
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0
+# black>=22.0.0
+# flake8>=5.0.0

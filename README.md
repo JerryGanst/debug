@@ -1,172 +1,239 @@
-# RAG平台部署指南
+# Excel MCP Server
 
-## 1. 环境准备
+A powerful Model Context Protocol (MCP) server that provides comprehensive Excel file manipulation capabilities through MinIO cloud storage integration.
 
-### 1.1 模型存储位置
-#### 测试环境 A100
-```
-/root/modelscope_models/
-```
+## Features
 
-#### H20环境
-```
-/mnt/ai_data/models/huggingface_models/
-```
+- **Excel File Operations**: Create, read, write, and manipulate Excel workbooks and worksheets
+- **Advanced Formatting**: Cell styling, borders, fonts, colors, and conditional formatting
+- **Data Analysis**: Pivot tables, charts, and Excel tables
+- **Formula Management**: Apply and validate Excel formulas
+- **Cloud Storage**: Seamless integration with MinIO for file persistence
+- **User Isolation**: Secure file management with user-specific storage
+- **Comprehensive API**: 30+ tools covering all major Excel operations
 
-#### L20环境
-```
-[请填写环境L20的模型位置]
-```
+## Architecture
 
-### 1.2 配置文件位置
-#### A100环境
-```
-/opt/rag-projects/rag-it/luxshare-ai-rag/vllm/
-```
+The server follows a clean architecture pattern with:
+- **Tools Layer**: Excel manipulation tools organized by functionality
+- **Core Layer**: File management and MCP server configuration
+- **Utils Layer**: Excel operation implementations
+- **MinIO Integration**: Cloud storage for file persistence
 
-#### H20环境
-```
-/mnt/ai_data/models/
-```
+## Installation
 
-#### L20环境
-```
-[请填写环境L20的配置文件路径]
-```
+### Prerequisites
 
-## 2. 模型部署
+- Python 3.10+
+- MinIO server or compatible S3 storage
+- Virtual environment (recommended)
 
-### 2.1 下载语言模型
-以H20环境为例，从 https://huggingface.co/ 下载模型，解压到 `/mnt/ai_data/models/huggingface_models/` 目录下。
+### Setup
 
-### 2.2 创建并激活虚拟环境
-以H20环境为例：
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Luxshare-ai-mcp-github
+   ```
+
+2. **Install dependencies**
+   ```bash
+   uv pip install -r requirements.txt
+   ```
+
+3. **Configure MinIO settings**
+   Create a `configs.yaml` file based on `configs_sample.yaml`:
+   ```yaml
+   minio:
+     endpoint: "localhost:9000"
+     access_key: "your-access-key"
+     secret_key: "your-secret-key"
+     bucket: "excel-files"
+     secure: false
+   ```
+
+## Usage
+
+### Starting the Server
+
 ```bash
-cd /opt/venvs/vllm_for_models_venvs
-python3.10 -m venv ./aaaa             # 在当前目录下创建名为aaaa的虚拟环境
-source ./aaaa/bin/activate            # 激活该虚拟环境
+python server.py
 ```
 
-### 2.3 安装依赖包
-#### 安装vllm
-```bash
-pip install --upgrade pip
-pip install uv
-uv pip install vllm --torch-backend=auto
+The server will start and register all Excel manipulation tools with the MCP protocol.
+
+### Available Tools
+
+The server provides tools in the following categories:
+
+- **MinIO Storage Operations**: File upload/download from cloud storage
+- **Workbook Operations**: Create and manage Excel workbooks
+- **Data Operations**: Read/write data to worksheets
+- **Formatting Operations**: Cell styling and formatting
+- **Formula Operations**: Excel formula management
+- **Chart Operations**: Create charts and graphs
+- **Pivot Table Operations**: Data analysis and summarization
+- **Table Operations**: Create structured Excel tables
+- **Worksheet Operations**: Manage individual worksheets
+- **Range Operations**: Work with cell ranges
+- **Row and Column Operations**: Insert/delete rows and columns
+
+For detailed tool documentation, see [TOOLS.md](TOOLS.md).
+
+## File Management
+
+### Local vs Cloud Storage
+
+- **Local Storage**: Temporary files for active operations
+- **MinIO Storage**: Permanent file storage with user isolation
+- **File Cleanup**: Automatic cleanup of local temporary files
+
+### User File Organization
+
+Files are organized in MinIO using the pattern:
+```
+bucket/
+└── private/
+    └── {user_id}/
+        ├── file1.xlsx
+        ├── file2.xlsx
+        └── ...
 ```
 
-#### 安装flash infer
-```bash
-pip install flashinfer-python==0.2.2
-```
+## Cleanup Mechanism
 
-### 2.4 创建模型配置文件
-#### 2.4.1 创建配置文件
-```bash
-vim /mnt/ai_data/models/qwen3_32b_awq_32k_on_H20.yaml
-```
+### Temporary File Cleanup
 
-#### 2.4.2 编辑配置参数
-按 `i` 进入编辑模式，右键粘贴以下内容：
+When the server is shut down using `Ctrl+C`, it automatically cleans up all temporary local files because:
+
+1. **All user files are stored in MinIO**: The primary storage is cloud-based
+2. **Local files are temporary**: Only used during active operations
+3. **Automatic cleanup**: Prevents disk space accumulation
+4. **Data safety**: No data loss as files are persisted in MinIO
+
+### Cleanup Process
+
+1. **Signal Handling**: Server catches `SIGINT` (Ctrl+C) signal
+2. **File Cleanup**: Removes all temporary Excel files from local storage
+3. **Graceful Shutdown**: Closes connections and exits cleanly
+
+### Benefits
+
+- **Disk Space Management**: Prevents accumulation of temporary files
+- **Clean Environment**: Fresh start on each server restart
+- **Data Persistence**: User files remain safe in MinIO storage
+- **Resource Efficiency**: Optimizes local storage usage
+
+## Configuration
+
+### Environment Variables
+
+- `MINIO_ENDPOINT`: MinIO server endpoint
+- `MINIO_ACCESS_KEY`: MinIO access key
+- `MINIO_SECRET_KEY`: MinIO secret key
+- `MINIO_BUCKET`: MinIO bucket name
+- `MINIO_SECURE`: Use HTTPS (true/false)
+
+### Configuration File
+
+The server can be configured using a YAML configuration file:
 
 ```yaml
-host: "0.0.0.0"
-port: 1002
-uvicorn-log-level: "info"
-served-model-name: "qwen3-32b-awq"
-gpu_memory_utilization: 0.95
-dtype: "bfloat16"
-kv-cache-dtype: "fp8"
-tensor-parallel-size: 4
-pipeline-parallel-size: 1
+minio:
+  endpoint: "localhost:9000"
+  access_key: "your-access-key"
+  secret_key: "your-secret-key"
+  bucket: "excel-files"
+  secure: false
+
+server:
+  host: "localhost"
+  port: 8000
+  debug: false
 ```
 
-#### 2.4.3 保存并退出
-按 `ESC` 退出编辑模式，输入 `:wq` 保存并退出。
+## Development
 
-### 2.5 启动vLLM服务
-以Qwen3 32B在H20*4环境为例：
+### Project Structure
+
+```
+src/
+├── core/           # Core server and file management
+├── tools/          # MCP tool implementations
+└── utils/          # Excel operation utilities
+```
+
+### Adding New Tools
+
+1. Implement the tool function in the appropriate module
+2. Register it in the corresponding tool registration function
+3. Update the TOOLS.md documentation
+4. Add appropriate error handling and validation
+
+### Testing
+
 ```bash
-export TORCH_CUDA_ARCH_LIST="9.0"
+# Run tests (if available)
+python -m pytest
 
-CUDA_VISIBLE_DEVICES=4,5,6,7 \
-VLLM_ATTENTION_BACKEND=FLASHINFER \
-vllm serve /mnt/ai_data/models/huggingface_models/Qwen_Qwen3-32B-AWQ \
-  --config /mnt/ai_data/models/qwen3_32b_awq_32k_on_H20.yaml \
-  --reasoning-parser qwen3 \
-  --enable-auto-tool-choice \
-  --tool-call-parser hermes
+# Run with coverage
+python -m pytest --cov=src
 ```
 
-## 3. RAG平台部署
+## Security Features
 
-### 3.1 下载RAG平台源码
-前往公司GitLab，复制下载链接后使用git clone命令复制至指定位置。
-例如在A100测试环境中：
-```bash
-git clone [repository_url] /opt/rag-projects/rag-it/luxshare-ai-rag
-```
+- **User Isolation**: Files are segregated by user ID
+- **Path Sanitization**: Prevents directory traversal attacks
+- **File Locking**: Prevents concurrent access conflicts
+- **Safe filenames**: Automatic filename sanitization
 
-### 3.2 导航至项目目录
-```bash
-cd /opt/rag-projects/rag-it/luxshare-ai-rag
-```
+## Error Handling
 
-### 3.3 创建Python虚拟环境
-```bash
-python3.13 -m venv ./venv
-```
+The server provides comprehensive error handling:
+- **Validation Errors**: Input parameter validation
+- **File Errors**: File operation error handling
+- **MinIO Errors**: Storage operation error handling
+- **User-Friendly Messages**: Clear error messages without path exposure
 
-### 3.4 激活虚拟环境
-```bash
-source ./venv/bin/activate
-```
+## Performance Considerations
 
-### 3.5 安装Python依赖包
-```bash
-pip install -r requirements.txt
-```
+- **File Locking**: Prevents concurrent access issues
+- **Efficient Operations**: Optimized Excel operations
+- **Memory Management**: Proper resource cleanup
+- **Async Operations**: Non-blocking file operations
 
-### 3.6 配置agent_configs
-#### 3.6.1 导航至configs文件夹
-```bash
-cd ./configs
-```
+## Troubleshooting
 
-#### 3.6.2 复制并修改配置文件
-```bash
-cp agent_configs_factory_it.yaml agent_configs.yaml
-```
-根据需要修改 `agent_configs.yaml` 文件中的配置参数。
+### Common Issues
 
-### 3.7 启动RAG服务
-在激活虚拟环境后，运行以下命令启动RAG平台：
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 9005
-```
+1. **MinIO Connection Failed**
+   - Check MinIO server status
+   - Verify endpoint and credentials
+   - Ensure bucket exists
 
-## 4. 服务验证
+2. **File Permission Errors**
+   - Check local directory permissions
+   - Verify MinIO bucket permissions
+   - Ensure user has write access
 
-### 4.1 模型服务验证
-如果vLLM模型服务启动成功，您将看到类似以下输出：
-```
-INFO:     Started server process [****]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-```
+3. **Memory Issues**
+   - Large Excel files may require more memory
+   - Consider file size limits
+   - Monitor server resource usage
 
-### 4.2 RAG平台服务验证
-如果RAG平台服务启动成功，您将看到类似以下输出：
-```
-INFO:     Started server process [****]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:9005 (Press CTRL+C to quit)
-```
+### Logs
 
-## 5. 注意事项
+The server provides detailed logging for debugging:
+- Tool execution logs
+- Error and exception logs
+- File operation logs
+- MinIO operation logs
 
-1. 确保所有路径根据实际环境进行调整
-2. 检查GPU显存是否足够支持模型运行
-3. 确保网络连接正常，能够访问HuggingFace等外部资源
-4. 定期检查日志文件以监控服务运行状态
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Update documentation
+6. Submit a pull request

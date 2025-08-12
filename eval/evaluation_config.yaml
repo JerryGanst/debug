@@ -1,7 +1,0 @@
-evaluation:
-  endpoint: "http://127.0.0.1:6379/v1"
-  key: "SOME_KEY"
-  temperature: 0.0
-  rag_url: "http://localhost:1235"
-  weaviate_endpoint: "http://localhost:8080"
-  llm_evaluation_weight: 0.8
