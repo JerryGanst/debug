@@ -2,7 +2,7 @@ import logging
 import json
 from typing import Optional
 from openpyxl import load_workbook
-from ..core.file_manager import get_safe_filename
+from ..core.file_manager import get_safe_file_name
 from ..utils.data import read_excel_range_with_metadata
 from ..utils.validation import validate_formula_in_cell_operation as validate_formula_impl
 from ..utils.validation import validate_range_in_sheet_operation as validate_range_impl
@@ -21,7 +21,7 @@ def register_excel_read_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "read"})
     def read_data_from_excel(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         start_cell: str,
         end_cell: str,
@@ -32,7 +32,7 @@ def register_excel_read_tools(mcp_server):
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet
             start_cell: Starting cell
             end_cell: Ending cell
@@ -42,8 +42,8 @@ def register_excel_read_tools(mcp_server):
             JSON string containing structured cell data with validation metadata.
             Each cell includes: address, value, row, column, and validation info (if any).
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = read_excel_range_with_metadata(
@@ -62,7 +62,7 @@ def register_excel_read_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "read"})
     def validate_formula_syntax(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         cell: str,
         formula: str,
@@ -72,7 +72,7 @@ def register_excel_read_tools(mcp_server):
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet
             cell: Target cell address (e.g., 'A1')
             formula: Excel formula to validate
@@ -80,15 +80,15 @@ def register_excel_read_tools(mcp_server):
         Returns:
             Validation result message indicating if the formula is valid or not
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = validate_formula_impl(str(file_path), sheet_name, cell, formula)
-                safe_result = result["message"].replace(str(file_path), safe_filename)
+                safe_result = result["message"].replace(str(file_path), safe_file_name)
                 return safe_result
         except (ValidationError, CalculationError) as e:
-            safe_error = str(e).replace(str(file_path), safe_filename)
+            safe_error = str(e).replace(str(file_path), safe_file_name)
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error validating formula: {e}")
@@ -98,7 +98,7 @@ def register_excel_read_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "read"})
     def validate_excel_range(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str,
         start_cell: str,
         end_cell: str
@@ -108,24 +108,24 @@ def register_excel_read_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Name of worksheet
             start_cell (str): Starting cell of range to validate (e.g., "A1")
             end_cell (str): Ending cell of range to validate (e.g., "C3").
                 If not provided, only the start_cell is validated. Defaults to None.
                 
         Returns:
-            str: Success message with filename
+            str: Success message with file_name
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = validate_range_impl(str(file_path), sheet_name, start_cell, end_cell)
-                safe_result = result["message"].replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result["message"].replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error validating range: {e}")
@@ -134,7 +134,7 @@ def register_excel_read_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "read"})
     def get_data_validation_info(
         user_id: str,
-        filename: str,
+        file_name: str,
         sheet_name: str
     ) -> str:
         """
@@ -145,14 +145,14 @@ def register_excel_read_tools(mcp_server):
         
         Args:
             user_id (str): User ID for file organization
-            filename (str): Name of the Excel file
+            file_name (str): Name of the Excel file
             sheet_name (str): Name of worksheet
             
         Returns:
             str: JSON string containing all validation rules in the worksheet
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 wb = load_workbook(str(file_path), read_only=False)
@@ -164,7 +164,7 @@ def register_excel_read_tools(mcp_server):
                 if not validations:
                     return "No data validation rules found in this worksheet"
                 return json.dumps({
-                    "filename": safe_filename,
+                    "file_name": safe_file_name,
                     "sheet_name": sheet_name,
                     "validation_rules": validations
                 }, indent=2, default=str)
@@ -175,27 +175,27 @@ def register_excel_read_tools(mcp_server):
         
     # Sheet related tools
     @mcp_server.tool(tags={"excel", "read"})
-    def get_merged_cells(user_id: str, filename: str, sheet_name: str) -> str:
+    def get_merged_cells(user_id: str, file_name: str, sheet_name: str) -> str:
         """
         Get all merged cell ranges in the worksheet.
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the Excel file
+            file_name: Name of the Excel file
             sheet_name: Name of worksheet
             
         Returns:
             String with merged ranges information
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = str(get_merged_ranges(str(file_path), sheet_name))
-                safe_result = result.replace(str(file_path), f"'{safe_filename}'")
+                safe_result = result.replace(str(file_path), f"'{safe_file_name}'")
                 return safe_result
         except (ValidationError, SheetError) as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error getting merged cells: {e}")
@@ -205,7 +205,7 @@ def register_excel_read_tools(mcp_server):
     @mcp_server.tool(tags={"excel", "read"})
     def get_workbook_metadata(
         user_id: str, 
-        filename: str, 
+        file_name: str, 
         include_ranges: bool = False
     ) -> str:
         """
@@ -213,23 +213,23 @@ def register_excel_read_tools(mcp_server):
         
         Args:
             user_id: User ID for file organization
-            filename: Name of the workbook file
+            file_name: Name of the workbook file
             include_ranges: Whether to include range information, default to false
             
         Returns:
             JSON string with workbook metadata
         """
-        safe_filename = get_safe_filename(filename)
-        file_path = mcp_server.file_manager.get_file_path(safe_filename, user_id)
+        safe_file_name = get_safe_file_name(file_name)
+        file_path = mcp_server.file_manager.get_file_path(safe_file_name, user_id)
         try:
             with mcp_server.file_manager.lock_file(file_path):
                 result = get_workbook_info(str(file_path), include_ranges=include_ranges)
-                # Normalize filename to avoid leaking any path and align with other tools' outputs
+                # Normalize file_name to avoid leaking any path and align with other tools' outputs
                 if isinstance(result, dict):
-                    result["filename"] = safe_filename
+                    result["file_name"] = safe_file_name
                 return json.dumps(result, indent=2, default=str)
         except WorkbookError as e:
-            safe_error = str(e).replace(str(file_path), f"'{safe_filename}'")
+            safe_error = str(e).replace(str(file_path), f"'{safe_file_name}'")
             return f"Error: {safe_error}"
         except Exception as e:
             logger.error(f"Error getting workbook metadata: {e}")
